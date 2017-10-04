@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.16
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgowpd", "libgowpd\libgowpd.vcxproj", "{9FC1F177-B54A-4DBA-8FA8-6F6037598D0A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NewFolder1", "NewFolder1", "{41DAAD91-5872-4624-A739-C4A24EE05E68}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\..\..\..\..\VisualStudio\Workspace\FileSynchronizer\FileSynchronizer\wpd.cpp = ..\..\..\..\..\..\..\VisualStudio\Workspace\FileSynchronizer\FileSynchronizer\wpd.cpp
+		..\..\..\..\..\..\..\VisualStudio\Workspace\FileSynchronizer\FileSynchronizer\wpd.h = ..\..\..\..\..\..\..\VisualStudio\Workspace\FileSynchronizer\FileSynchronizer\wpd.h
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test\Test.vcxproj", "{2D9B7270-8BE3-4B80-A50D-32BB505A22CB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9FC1F177-B54A-4DBA-8FA8-6F6037598D0A} = {9FC1F177-B54A-4DBA-8FA8-6F6037598D0A}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9FC1F177-B54A-4DBA-8FA8-6F6037598D0A}.Debug|x64.ActiveCfg = Debug|x64
+		{9FC1F177-B54A-4DBA-8FA8-6F6037598D0A}.Debug|x64.Build.0 = Debug|x64
+		{9FC1F177-B54A-4DBA-8FA8-6F6037598D0A}.Debug|x86.ActiveCfg = Debug|Win32
+		{9FC1F177-B54A-4DBA-8FA8-6F6037598D0A}.Debug|x86.Build.0 = Debug|Win32
+		{9FC1F177-B54A-4DBA-8FA8-6F6037598D0A}.Release|x64.ActiveCfg = Release|x64
+		{9FC1F177-B54A-4DBA-8FA8-6F6037598D0A}.Release|x64.Build.0 = Release|x64
+		{9FC1F177-B54A-4DBA-8FA8-6F6037598D0A}.Release|x86.ActiveCfg = Release|Win32
+		{9FC1F177-B54A-4DBA-8FA8-6F6037598D0A}.Release|x86.Build.0 = Release|Win32
+		{2D9B7270-8BE3-4B80-A50D-32BB505A22CB}.Debug|x64.ActiveCfg = Debug|x64
+		{2D9B7270-8BE3-4B80-A50D-32BB505A22CB}.Debug|x64.Build.0 = Debug|x64
+		{2D9B7270-8BE3-4B80-A50D-32BB505A22CB}.Debug|x86.ActiveCfg = Debug|Win32
+		{2D9B7270-8BE3-4B80-A50D-32BB505A22CB}.Debug|x86.Build.0 = Debug|Win32
+		{2D9B7270-8BE3-4B80-A50D-32BB505A22CB}.Release|x64.ActiveCfg = Release|x64
+		{2D9B7270-8BE3-4B80-A50D-32BB505A22CB}.Release|x64.Build.0 = Release|x64
+		{2D9B7270-8BE3-4B80-A50D-32BB505A22CB}.Release|x86.ActiveCfg = Release|Win32
+		{2D9B7270-8BE3-4B80-A50D-32BB505A22CB}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {78E30FDF-4243-4A00-9D16-B3C8A3C94C80}
+	EndGlobalSection
+EndGlobal
