@@ -1,8 +1,37 @@
+/*
+This package provides WindowsPortableDevice API.
+
+
+Example
+
+IPortableDeviceManager
+
+	gowpd.Initialize()
+
+	pPortableDeviceManager, err := gowpd.CreatePortableDeviceManager()
+	if err != nil {
+		panic(err)
+	}
+
+	deviceIDs, err := pPortableDeviceManager.GetDevices()
+
+
+Warnings not solved
+
+	Warning: .drectve `/DEFAULTLIB:"uuid.lib" /DEFAULTLIB:"uuid.lib" ' unrecognized
+
+	Warning: .drectve `/FAILIFMISMATCH:"_CRT_STDIO_ISO_WIDE_SPECIFIERS=0" /DEFAULTLIB:"uuid.lib" /DEFAULTLIB:"uuid.lib" ' unrecognized
+
+	Warning: corrupt .drectve at end of def file
+
+비주얼 스튜디오 에서 빌드시 추가되는 링크 옵션이라고 함. 말그대로 경고 이므로 무시해도 되는 듯 함.
+
+*/
 package gowpd
 
 /*
-#cgo windows CFLAGS: -I "${SRCDIR}/../libgowpd/libgowpd"
-#cgo windows LDFLAGS: -L "${SRCDIR}/../libgowpd/x64/Debug" -llibgowpd -lOle32
+#cgo windows CFLAGS: -I "${SRCDIR}/libgowpd/libgowpd"
+#cgo windows LDFLAGS: -L "${SRCDIR}/libgowpd/x64/Debug" -llibgowpd -lOle32
 // -lPortableDeviceGuids -luuid
 
 #include "libgowpd.h"
@@ -12,10 +41,13 @@ import (
 	"unsafe"
 	"log"
 	"fmt"
+	"unicode/utf16"
+	"unicode/utf8"
 )
 
 const (
 	S_OK HRESULT = C.S_OK & 0xffffffff// 0x00000000
+	S_FALSE HRESULT = C.S_FALSE & 0xffffffff// 0x00000001
 
 	E_ABORT HRESULT = C.E_ABORT & 0xffffffff// 0x80004004
 	E_ACCESSDENIED HRESULT = C.E_ACCESSDENIED & 0xffffffff// 0x80070005
@@ -38,6 +70,25 @@ const (
 	WPD_CLIENT_REVISION
 	WPD_CLIENT_SECURITY_QUALITY_OF_SERVICE
 	WPD_CLIENT_DESIRED_ACCESS
+
+	WPD_OBJECT_PARENT_ID
+	WPD_OBJECT_NAME
+	WPD_OBJECT_PERSISTENT_UNIQUE_ID
+	WPD_OBJECT_FORMAT
+	WPD_OBJECT_CONTENT_TYPE
+
+	WPD_PROPERTY_ATTRIBUTE_FORM
+	WPD_PROPERTY_ATTRIBUTE_CAN_READ
+	WPD_PROPERTY_ATTRIBUTE_CAN_WRITE
+	WPD_PROPERTY_ATTRIBUTE_CAN_DELETE
+	WPD_PROPERTY_ATTRIBUTE_DEFAULT_VALUE
+	WPD_PROPERTY_ATTRIBUTE_FAST_PROPERTY
+	WPD_PROPERTY_ATTRIBUTE_RANGE_MIN
+	WPD_PROPERTY_ATTRIBUTE_RANGE_MAX
+	WPD_PROPERTY_ATTRIBUTE_RANGE_STEP
+	WPD_PROPERTY_ATTRIBUTE_ENUMERATION_ELEMENTS
+	WPD_PROPERTY_ATTRIBUTE_REGULAR_EXPRESSION
+	WPD_PROPERTY_ATTRIBUTE_MAX_SIZE
 )
 
 const (
@@ -51,6 +102,9 @@ const (
 	GENERIC_ALL = 0x10000000
 )
 
+// C.WCHAR
+// 16bit-encoded
+type WCHAR uint16;
 // C.HRESULT
 type HRESULT uint32
 // C.DWORD
@@ -66,6 +120,13 @@ type IPortableDevice C.IPortableDevice
 type IPortableDeviceValues C.IPortableDeviceValues
 type IPortableDeviceManager C.IPortableDeviceManager
 type IPortableDeviceContent C.IPortableDeviceContent
+type IPortableDeviceKeyCollection C.IPortableDeviceKeyCollection
+type IPortableDeviceProperties C.IPortableDeviceProperties
+type IPortableDeviceDataStream C.IPortableDeviceDataStream
+type IPortableDeviceCapabilities C.IPortableDeviceCapabilities
+type IPortableDevicePropVariantCollection C.IPortableDevicePropVariantCollection
+type IPortableDeviceEventCallback C.IPortableDeviceEventCallback
+type IStream C.IStream
 
 type IEnumPortableDeviceObjectIDs C.IEnumPortableDeviceObjectIDs
 
@@ -118,8 +179,42 @@ func (propertyKey PropertyKey) toCPropertyKey() *C.PROPERTYKEY {
 		return &C.WPD_CLIENT_SECURITY_QUALITY_OF_SERVICE
 	case WPD_CLIENT_DESIRED_ACCESS:
 		return &C.WPD_CLIENT_DESIRED_ACCESS
+	case WPD_OBJECT_PARENT_ID:
+		return &C.WPD_OBJECT_PARENT_ID
+	case WPD_OBJECT_NAME:
+		return &C.WPD_OBJECT_NAME
+	case WPD_OBJECT_PERSISTENT_UNIQUE_ID:
+		return &C.WPD_OBJECT_PERSISTENT_UNIQUE_ID
+	case WPD_OBJECT_FORMAT:
+		return &C.WPD_OBJECT_FORMAT
+	case WPD_OBJECT_CONTENT_TYPE:
+		return &C.WPD_OBJECT_CONTENT_TYPE
+	case WPD_PROPERTY_ATTRIBUTE_FORM:
+		return &C.WPD_PROPERTY_ATTRIBUTE_FORM
+	case WPD_PROPERTY_ATTRIBUTE_CAN_READ:
+		return &C.WPD_PROPERTY_ATTRIBUTE_CAN_READ
+	case WPD_PROPERTY_ATTRIBUTE_CAN_WRITE:
+		return &C.WPD_PROPERTY_ATTRIBUTE_CAN_WRITE
+	case WPD_PROPERTY_ATTRIBUTE_CAN_DELETE:
+		return &C.WPD_PROPERTY_ATTRIBUTE_CAN_DELETE
+	case WPD_PROPERTY_ATTRIBUTE_DEFAULT_VALUE:
+		return &C.WPD_PROPERTY_ATTRIBUTE_DEFAULT_VALUE
+	case WPD_PROPERTY_ATTRIBUTE_FAST_PROPERTY:
+		return &C.WPD_PROPERTY_ATTRIBUTE_FAST_PROPERTY
+	case WPD_PROPERTY_ATTRIBUTE_RANGE_MIN:
+		return &C.WPD_PROPERTY_ATTRIBUTE_RANGE_MIN
+	case WPD_PROPERTY_ATTRIBUTE_RANGE_MAX:
+		return &C.WPD_PROPERTY_ATTRIBUTE_RANGE_MAX
+	case WPD_PROPERTY_ATTRIBUTE_RANGE_STEP:
+		return &C.WPD_PROPERTY_ATTRIBUTE_RANGE_STEP
+	case WPD_PROPERTY_ATTRIBUTE_ENUMERATION_ELEMENTS:
+		return &C.WPD_PROPERTY_ATTRIBUTE_ENUMERATION_ELEMENTS
+	case WPD_PROPERTY_ATTRIBUTE_REGULAR_EXPRESSION:
+		return &C.WPD_PROPERTY_ATTRIBUTE_REGULAR_EXPRESSION
+	case WPD_PROPERTY_ATTRIBUTE_MAX_SIZE:
+		return &C.WPD_PROPERTY_ATTRIBUTE_MAX_SIZE
 	default:
-		return nil// TODO error
+		panic("unexpected")
 	}
 }
 
@@ -183,25 +278,26 @@ func CreatePortableDeviceManager() (*IPortableDeviceManager, error) {
 	if hr < 0 {
 		return nil, HRESULT(hr)
 	}
-	if pPortableDeviceManager == nil {
-		return nil, E_POINTER
-	}
 
 	log.Println("CreatePortableDeviceManager(): Create portable device manager instance.")
 
 	return (*IPortableDeviceManager)(pPortableDeviceManager), nil
 }
 
-func (pPortableDevice *IPortableDevice) Open(pnpDeviceID PnPDeviceID, pClientInfo *IPortableDeviceValues) error {
-	log.Println("Open(): Ready")
+func CreatePortableDeviceKeyCollection() (*IPortableDeviceKeyCollection, error) {
+	var (
+		pPortableDeviceKeyCollection *C.IPortableDeviceKeyCollection
+	)
 
-	hr := C.portableDevice_Open((*C.IPortableDevice)(pPortableDevice), pnpDeviceID, (*C.IPortableDeviceValues)(pClientInfo))
+	log.Println("CreatePortableDeviceKeyCollection(): Ready")
+
+	hr := C.createPortableDeviceKeyCollection(&pPortableDeviceKeyCollection)
 
 	if hr < 0 {
-		return HRESULT(hr)
+		return nil, HRESULT(hr)
 	}
 
-	return nil
+	return (*IPortableDeviceKeyCollection)(pPortableDeviceKeyCollection), nil
 }
 
 func (pPortableDevice *IPortableDevice) Content() (*IPortableDeviceContent, error) {
@@ -220,6 +316,18 @@ func (pPortableDevice *IPortableDevice) Content() (*IPortableDeviceContent, erro
 	return (*IPortableDeviceContent)(pPortableDeviceContent), nil
 }
 
+func (pPortableDevice *IPortableDevice) Open(pnpDeviceID PnPDeviceID, pClientInfo *IPortableDeviceValues) error {
+	log.Println("Open(): Ready")
+
+	hr := C.portableDevice_Open((*C.IPortableDevice)(pPortableDevice), pnpDeviceID, (*C.IPortableDeviceValues)(pClientInfo))
+
+	if hr < 0 {
+		return HRESULT(hr)
+	}
+
+	return nil
+}
+
 func (pPortableDevice *IPortableDevice) Release() error {
 	hr := C.portableDevice_Release((*C.IPortableDevice)(pPortableDevice))
 
@@ -228,6 +336,20 @@ func (pPortableDevice *IPortableDevice) Release() error {
 	}
 
 	return nil
+}
+
+func (pPortableDeviceValues *IPortableDeviceValues) GetBoolValue(key PropertyKey) (bool, error) {
+	var (
+		value C.BOOL// non-zero is TRUE, zero is FALSE. Windows Type.
+	)
+
+	hr := C.portableDeviceValues_GetBoolValue((*C.IPortableDeviceValues)(pPortableDeviceValues), key.toCPropertyKey(), &value)
+
+	if hr < 0 {
+		return false, HRESULT(hr)
+	}
+
+	return value != 0, nil
 }
 
 func (pPortableDeviceValues *IPortableDeviceValues) GetStringValue(key PropertyKey) (string, error) {
@@ -303,6 +425,16 @@ func (pPortableDeviceValues *IPortableDeviceValues) SetUnsignedIntegerValue(key 
 	log.Println("SetUnsignedIntegerValue(): Ready")
 
 	hr := C.portableDeviceValues_SetUnsignedIntegerValue((*C.IPortableDeviceValues)(pPortableDeviceValues), key.toCPropertyKey(), C.ULONG(value))
+
+	if hr < 0 {
+		return HRESULT(hr)
+	}
+
+	return nil
+}
+
+func (pPortableDeviceValues *IPortableDeviceValues) Release() error {
+	hr := C.portableDeviceValues_Release((*C.IPortableDeviceValues)(pPortableDeviceValues))
 
 	if hr < 0 {
 		return HRESULT(hr)
@@ -410,6 +542,24 @@ func (pPortableDeviceManager *IPortableDeviceManager) Release() {
 }
 
 // TODO not finished
+func (pPortableDeviceContent *IPortableDeviceContent) CreateObjectWithPropertiesAndData(pValues *IPortableDeviceValues) (*IStream, error) {
+	var (
+		pData *C.IStream
+		optimalWriteBufferSize C.DWORD = 0// TRUE for ignoring
+		pCookie C.PWSTR = nil// Optional.
+	)
+
+	hr := C.portableDeviceContent_CreateObjectWithPropertiesAndData((*C.IPortableDeviceContent)(pPortableDeviceContent), (*C.IPortableDeviceValues)(pValues), &pData, &optimalWriteBufferSize, &pCookie)
+
+	if hr < 0 {
+		return nil, HRESULT(hr)
+	}
+
+	return (*IStream)(pData), nil
+}
+
+// TODO not finished
+// parentObjectID: start from it.
 func (pPortableDeviceContent *IPortableDeviceContent) EnumObjects(parentObjectID string) (*IEnumPortableDeviceObjectIDs, error) {
 	var (
 		flags C.DWORD = 0// ignored
@@ -418,8 +568,10 @@ func (pPortableDeviceContent *IPortableDeviceContent) EnumObjects(parentObjectID
 		pEnum *C.IEnumPortableDeviceObjectIDs
 	)
 
-	pwstrParentObjectID = allocatePWSTR(parentObjectID)
+	pwstrParentObjectID, _ = allocatePWSTR(parentObjectID)
 	defer C.free(unsafe.Pointer(pwstrParentObjectID))
+
+	log.Println("EnumObjects(): Ready")
 
 	hr := C.portableDeviceContent_EnumObjects((*C.IPortableDeviceContent)(pPortableDeviceContent), flags, pwstrParentObjectID, pFilter, &pEnum)
 
@@ -430,17 +582,157 @@ func (pPortableDeviceContent *IPortableDeviceContent) EnumObjects(parentObjectID
 	return (*IEnumPortableDeviceObjectIDs)(pEnum), nil
 }
 
-// TODO not implemented
-func (pEnumObjectIDs *IEnumPortableDeviceObjectIDs) Next() {
+func (pPortableDeviceContent *IPortableDeviceContent) Properties() (*IPortableDeviceProperties, error) {
+	var (
+		pPortableDeviceProperties *C.IPortableDeviceProperties
+	)
 
+	log.Println("Properties(): Ready")
+
+	hr := C.portableDeviceContent_Properties((*C.IPortableDeviceContent)(pPortableDeviceContent), &pPortableDeviceProperties)
+
+	if hr < 0 {
+		return nil, HRESULT(hr)
+	}
+
+	return (*IPortableDeviceProperties)(pPortableDeviceProperties), nil
 }
 
-// PWSTR to GoString.
+func (pPortableDeviceKeyCollection *IPortableDeviceKeyCollection) Add(key PropertyKey) error {
+	log.Println("Add(): Ready")
+
+	hr := C.portableDeviceKeyCollection_Add((*C.IPortableDeviceKeyCollection)(pPortableDeviceKeyCollection), key.toCPropertyKey())
+
+	if hr < 0 {
+		return HRESULT(hr)
+	}
+
+	return nil
+}
+
+func (pPortableDeviceProperties *IPortableDeviceProperties) GetValues(objectID string, keys *IPortableDeviceKeyCollection) (*IPortableDeviceValues, error) {
+	var (
+		pPortableDeviceValues *C.IPortableDeviceValues
+	)
+
+	pObjectID, err := allocatePWSTR(objectID)
+	if err != nil {
+		panic(err)
+	}
+	defer C.free(unsafe.Pointer(pObjectID))
+
+	hr := C.portableDeviceProperties_GetValues((*C.IPortableDeviceProperties)(pPortableDeviceProperties), pObjectID, (*C.IPortableDeviceKeyCollection)(keys), &pPortableDeviceValues)
+
+	if hr < 0 {
+		return nil, HRESULT(hr)
+	}
+
+	return (*IPortableDeviceValues)(pPortableDeviceValues), nil
+}
+
+func (pPortableDeviceProperties *IPortableDeviceProperties) GetPropertyAttributes(objectID string, key PropertyKey) (*IPortableDeviceValues, error) {
+	var (
+		pPortableDeviceValues *C.IPortableDeviceValues
+	)
+
+	pObjectID, err := allocatePWSTR(objectID)
+	if err != nil {
+		panic(err)
+	}
+	defer C.free(unsafe.Pointer(pObjectID))
+
+	hr := C.portableDeviceProperties_GetPropertyAttributes((*C.IPortableDeviceProperties)(pPortableDeviceProperties), pObjectID, key.toCPropertyKey(), &pPortableDeviceValues)
+
+	if hr < 0 {
+		return nil, HRESULT(hr)
+	}
+
+	return (*IPortableDeviceValues)(pPortableDeviceValues), nil
+}
+
+func (pPortableDeviceProperties *IPortableDeviceProperties) SetValues(objectID string, pValues *IPortableDeviceValues) error {
+	var (
+		pResults *C.IPortableDeviceValues
+	)
+
+	pObjectID, err := allocatePWSTR(objectID)
+	if err != nil {
+		panic(err)
+	}
+	defer C.free(unsafe.Pointer(pObjectID))
+
+	hr := C.portableDeviceProperties_SetValues((*C.IPortableDeviceProperties)(pPortableDeviceProperties), pObjectID, (*C.IPortableDeviceValues)(pValues), &pResults)
+	if hr < 0 {
+		return HRESULT(hr)
+	}
+
+	// TODO do something with pResults
+
+	err = (*IPortableDeviceValues)(pResults).Release()
+	if err != nil {
+		panic(err)
+	}
+
+	return nil
+}
+
+// cObjects: Number of objects to request on each NEXT
+//
+func (pEnumObjectIDs *IEnumPortableDeviceObjectIDs) Next(cObjects uint32) ([]string, error) {
+	var (
+		pObjIDs *C.PWSTR// Array of PWSTR. Not a PWSTR. Must have a size of cObjects. ObjectIDs will be here.
+		cObjIDs *C.DWORD// Array of size of PWSTR.
+		cPetched C.ULONG// amounts of ObjectID placed in pObjIDs.
+	)
+
+	pObjIDs = (*C.PWSTR)(C.malloc(C.size_t(C.sizeof_PWSTR * cObjects)))
+	cObjIDs = (*C.DWORD)(C.malloc(C.size_t(C.sizeof_DWORD * cObjects)))
+	defer C.free(unsafe.Pointer(pObjIDs))
+	defer C.free(unsafe.Pointer(cObjIDs))
+
+	log.Println("Next(): Ready")
+
+	hr := C.enumPortableDeviceObjectIDs_Next((*C.IEnumPortableDeviceObjectIDs)(pEnumObjectIDs), C.ULONG(cObjects), pObjIDs, cObjIDs, &cPetched)
+
+	log.Printf("Next(): {result: %s, cPetched: %d}\n", HRESULT(hr), cPetched)
+
+	if hr < 0 {
+		return nil, HRESULT(hr)
+	}
+
+	rawPWSTR := (*[1 << 30]C.PWSTR)(unsafe.Pointer(pObjIDs))[:cPetched:cPetched]
+	rawDWORD := (*[1 << 30]C.DWORD)(unsafe.Pointer(cObjIDs))[:cPetched:cPetched]
+
+	objects := make([]string, ULONG(cPetched))
+	for i, pwstr := range rawPWSTR {
+		str := toGoString(pwstr, rawDWORD[i])
+		objects[i] = str
+
+		log.Printf("Next(): {object: %s, length: %d}\n", str, DWORD(rawDWORD[i]))
+
+		C.CoTaskMemFree(C.LPVOID(pwstr))
+	}
+
+	return objects, nil
+}
+
+// Convert PWSTR to GoString.
+// PWSTR is null-terminated string. So maybe cStr has bigger size than actual length of str by 1 byte.
+// PWSTR is utf-16 formatted. It converts utf-16 format into utf-8 format which Go-lang originally supports.
 func toGoString(str C.PWSTR, cStr C.DWORD) string {
 	raw := (*[1 << 30]C.WCHAR)(unsafe.Pointer(str))[:cStr:cStr]
-	goString := make([]byte, DWORD(cStr))
+	utf16Str := make([]uint16, DWORD(cStr))
 	for i, wchar := range raw {
-		goString[i] = byte(wchar)
+		utf16Str[i] = uint16(wchar)
+	}
+
+	decodedStr := utf16.Decode(utf16Str)
+	goString := make([]byte, 0)
+	for _, decodedChar := range decodedStr {
+		buffer := make([]byte, 4)
+		bytes := utf8.EncodeRune(buffer, decodedChar)
+
+		goString = append(goString, buffer[:bytes]...)
 	}
 
 	return string(goString)
@@ -448,13 +740,27 @@ func toGoString(str C.PWSTR, cStr C.DWORD) string {
 
 // Allocate memory.
 // Must be unallocated after being used.
-func allocatePWSTR(value string) C.PWSTR {
+// PWSTR is null-terminated string so it allocates memory size of len(value) + 1
+func allocatePWSTR(value string) (C.PWSTR, error) {
+	decodedStr := make([]rune, 0, len(value))
+	utf8Str := []byte(value)
+	for len(utf8Str) > 0 {
+		r, s := utf8.DecodeRune(utf8Str)
+		decodedStr = append(decodedStr, r)
+		utf8Str = utf8Str[s:]
+	}
+	utf16Str := utf16.Encode(decodedStr)
+
 	pwstr := C.malloc(C.size_t(C.sizeof_WCHAR * (len(value) + 1)))
+	if pwstr == nil {
+		return nil, E_POINTER
+	}
 	raw := (*[1 << 30]C.WCHAR)(pwstr)[:len(value) + 1:len(value) + 1]
-	for i, b := range []byte(value) {
-		raw[i] = C.WCHAR(b)
+
+	for i, r := range utf16Str {
+		raw[i] = C.WCHAR(r)
 	}
 	raw[len(value)] = 0
 
-	return C.PWSTR(pwstr)
+	return C.PWSTR(pwstr), nil
 }

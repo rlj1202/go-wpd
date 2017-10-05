@@ -42,16 +42,62 @@ HRESULT createPortableDeviceManager(IPortableDeviceManager **ppPortableDeviceMan
 	return hr;
 }
 
-HRESULT portableDevice_Open(IPortableDevice *pPortableDevice, PnPDeviceID pnpDeviceID, IPortableDeviceValues *pClientInfo) {
-	return pPortableDevice->Open(pnpDeviceID, pClientInfo);
+HRESULT createPortableDeviceKeyCollection(IPortableDeviceKeyCollection **ppPortableDeviceKeyCollection) {
+	if (ppPortableDeviceKeyCollection == NULL) {
+		return E_POINTER;
+	}
+
+	HRESULT hr = CoCreateInstance(CLSID_PortableDeviceKeyCollection,
+		NULL,
+		CLSCTX_INPROC_SERVER,
+		IID_IPortableDeviceKeyCollection,
+		(LPVOID*)ppPortableDeviceKeyCollection);
+
+	return hr;
+}
+
+HRESULT portableDevice_Advise(IPortableDevice *pPortableDevice, DWORD flags, IPortableDeviceEventCallback *pCallback, IPortableDeviceValues *pParameters, PWSTR *ppCookie) {
+	return pPortableDevice->Advise(flags, pCallback, pParameters, ppCookie);
+}
+
+HRESULT portableDevice_Cancel(IPortableDevice *pPortableDevice) {
+	return pPortableDevice->Cancel();
+}
+
+HRESULT portableDevice_Capabilities(IPortableDevice *pPortableDevice, IPortableDeviceCapabilities **ppCapabilities) {
+	return pPortableDevice->Capabilities(ppCapabilities);
+}
+
+HRESULT portableDevice_Close(IPortableDevice *pPortableDevice) {
+	return pPortableDevice->Close();
 }
 
 HRESULT portableDevice_Content(IPortableDevice *pPortableDevice, IPortableDeviceContent **ppPortableDeviceContent) {
 	return pPortableDevice->Content(ppPortableDeviceContent);
 }
 
+HRESULT portableDevice_GetPnPDeviceID(IPortableDevice *pPortableDevice, PnPDeviceID *pPnPDeviceID) {
+	return pPortableDevice->GetPnPDeviceID(pPnPDeviceID);
+}
+
+HRESULT portableDevice_Open(IPortableDevice *pPortableDevice, PnPDeviceID pnpDeviceID, IPortableDeviceValues *pClientInfo) {
+	return pPortableDevice->Open(pnpDeviceID, pClientInfo);
+}
+
+HRESULT portableDevice_SendCommand(IPortableDevice *pPortableDevice, DWORD flags, IPortableDeviceValues *pValues, IPortableDeviceValues **ppResults) {
+	return pPortableDevice->SendCommand(flags, pValues, ppResults);
+}
+
+HRESULT portableDevice_Unadvise(IPortableDevice *pPortableDevice, PWSTR pCookie) {
+	return pPortableDevice->Unadvise(pCookie);
+}
+
 HRESULT portableDevice_Release(IPortableDevice *pPortableDevice) {
 	return pPortableDevice->Release();
+}
+
+HRESULT portableDeviceValues_GetBoolValue(IPortableDeviceValues *pPortableDeviceValues, const PROPERTYKEY *key, BOOL *value) {
+	return pPortableDeviceValues->GetBoolValue(*key, value);
 }
 
 HRESULT portableDeviceValues_GetStringValue(IPortableDeviceValues *pPortableDeviceValues, const PROPERTYKEY *key, PWSTR *value, DWORD *cValue) {
@@ -73,6 +119,10 @@ HRESULT portableDeviceValues_SetStringValue(IPortableDeviceValues *pPortableDevi
 
 HRESULT portableDeviceValues_SetUnsignedIntegerValue(IPortableDeviceValues *pPortableDeviceValues, const PROPERTYKEY *key, const ULONG value) {
 	return pPortableDeviceValues->SetUnsignedIntegerValue(*key, value);
+}
+
+HRESULT portableDeviceValues_Release(IPortableDeviceValues *pPortableDeviceValues) {
+	return pPortableDeviceValues->Release();
 }
 
 HRESULT portableDeviceManager_GetDevices(IPortableDeviceManager *pPortableDeviceManager, PnPDeviceID **pPnPDeviceIDs, DWORD *cPnPDeviceIDs) {
@@ -130,6 +180,45 @@ HRESULT portableDeviceManager_GetDeviceDescription(IPortableDeviceManager *pPort
 			return E_OUTOFMEMORY;
 		}
 		hr = pPortableDeviceManager->GetDeviceDescription(pnpDeviceID, *pDescription, cDescription);
+	}
+
+	return hr;
+}
+
+HRESULT portableDeviceContent_CreateObjectWithPropertiesAndData(IPortableDeviceContent *pPortableDeviceContent, IPortableDeviceValues *pValues, IStream **ppData, DWORD *pOptimalWriteBufferSize, PWSTR *ppCookie) {
+	return pPortableDeviceContent->CreateObjectWithPropertiesAndData(pValues, ppData, pOptimalWriteBufferSize, ppCookie);
+}
+
+HRESULT portableDeviceContent_EnumObjects(IPortableDeviceContent *pPortableDeviceContent, DWORD flags, PWSTR parentObjectID, IPortableDeviceValues *pFilter, IEnumPortableDeviceObjectIDs **ppEnum) {
+	return pPortableDeviceContent->EnumObjects(flags, parentObjectID, pFilter, ppEnum);
+}
+
+HRESULT portableDeviceContent_Properties(IPortableDeviceContent *pPortableDeviceContent, IPortableDeviceProperties **ppPortableDeviceProperties) {
+	return pPortableDeviceContent->Properties(ppPortableDeviceProperties);
+}
+
+HRESULT portableDeviceKeyCollection_Add(IPortableDeviceKeyCollection *pPortableDeviceKeyCollection, const PROPERTYKEY *key) {
+	return pPortableDeviceKeyCollection->Add(*key);
+}
+
+HRESULT portableDeviceProperties_GetValues(IPortableDeviceProperties *pPortableDeviceProperties, PWSTR objectID, IPortableDeviceKeyCollection *pKeys, IPortableDeviceValues **ppValues) {
+	return pPortableDeviceProperties->GetValues(objectID, pKeys, ppValues);
+}
+
+HRESULT portableDeviceProperties_GetPropertyAttributes(IPortableDeviceProperties *pPortableDeviceProperties, PWSTR pObjectID, const PROPERTYKEY *key, IPortableDeviceValues **ppAttributes) {
+	return pPortableDeviceProperties->GetPropertyAttributes(pObjectID, *key, ppAttributes);
+}
+
+HRESULT portableDeviceProperties_SetValues(IPortableDeviceProperties *pPortableDeviceProperties, PWSTR pObjectID, IPortableDeviceValues *pValues, IPortableDeviceValues **ppResults) {
+	return pPortableDeviceProperties->SetValues(pObjectID, pValues, ppResults);
+}
+
+HRESULT enumPortableDeviceObjectIDs_Next(IEnumPortableDeviceObjectIDs *pEnumObjectIDs, ULONG cObjects, PWSTR *pObjIDs, DWORD *pcObjIDs, ULONG *pcPetched) {
+	HRESULT hr = pEnumObjectIDs->Next(cObjects, pObjIDs, pcPetched);
+	if (SUCCEEDED(hr)) {
+		for (int i = 0; i < *pcPetched; i++) {
+			pcObjIDs[i] = wcslen(pObjIDs[i]);
+		}
 	}
 
 	return hr;
@@ -194,8 +283,4 @@ void test() {
 			}
 		}
 	}
-}
-
-HRESULT portableDeviceContent_EnumObjects(IPortableDeviceContent *pPortableDeviceContent, DWORD flags, PWSTR parentObjectID, IPortableDeviceValues *pFilter, IEnumPortableDeviceObjectIDs **ppEnum) {
-	return pPortableDeviceContent->EnumObjects(flags, parentObjectID, pFilter, ppEnum);
 }

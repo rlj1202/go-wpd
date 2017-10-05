@@ -1,19 +1,15 @@
-package main
+package gowpd_test
 
 import (
 	"fmt"
-	"github.com/rlj1202/go-wpd/gowpd"
+	"github.com/rlj1202/go-wpd"
+	"testing"
 )
 
-func main () {
+func TestAll(t *testing.T) {
 	gowpd.Initialize()
 
 	pPortableDeviceManager, err := gowpd.CreatePortableDeviceManager()
-	if err != nil {
-		panic(err)
-	}
-
-	pPortableDevice, err := gowpd.CreatePortableDevice()
 	if err != nil {
 		panic(err)
 	}
@@ -54,6 +50,11 @@ func main () {
 		fmt.Println(manufacturer)
 		fmt.Println(description)
 
+		pPortableDevice, err := gowpd.CreatePortableDevice()
+		if err != nil {
+			panic(err)
+		}
+
 		err = pPortableDevice.Open(id, pClientInfo)
 		if err != nil {
 			panic(err)
@@ -63,15 +64,28 @@ func main () {
 		if err != nil {
 			panic(err)
 		}
-		_, err = content.EnumObjects(gowpd.WPD_DEVICE_OBJECT_ID)
+		pEnumObjects, err := content.EnumObjects(gowpd.WPD_DEVICE_OBJECT_ID)
 		if err != nil {
 			panic(err)
 		}
+		objects, err := pEnumObjects.Next(10)
+		if err != nil {
+			panic(err)
+		}
+		for _, obj := range objects {
+			fmt.Println(obj)
+
+			test, _ := content.EnumObjects(obj)
+			tests, _ := test.Next(30)
+			for _, t := range tests {
+				fmt.Println(t)
+			}
+		}
 
 		gowpd.FreeDeviceID(id)
+		pPortableDevice.Release()
 	}
 
-	pPortableDevice.Release()
 	pPortableDeviceManager.Release()
 
 	gowpd.Uninitialize()
