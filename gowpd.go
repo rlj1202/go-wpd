@@ -29,10 +29,12 @@ Warnings not solved
 */
 package gowpd
 
+//go:generate go run gen/genconst.go
+
 /*
 #cgo windows CFLAGS: -I "${SRCDIR}/libgowpd/libgowpd"
 #cgo windows LDFLAGS: -L "${SRCDIR}/libgowpd/x64/Debug" -llibgowpd -lOle32
-// -lPortableDeviceGuids -luuid
+//-lPortableDeviceGuids -luuid
 
 #include "libgowpd.h"
  */
@@ -43,6 +45,7 @@ import (
 	"fmt"
 	"unicode/utf16"
 	"unicode/utf8"
+	"encoding/binary"
 )
 
 const (
@@ -64,6 +67,15 @@ const (
 )
 
 const (
+	CLSID_PortableDeviceManager CLSID = iota
+)
+
+const (
+	IID_IPortableDeviceValues IID = iota
+	IID_IPortableDeviceDataStream
+)
+
+const (
 	WPD_CLIENT_NAME PropertyKey = iota
 	WPD_CLIENT_MAJOR_VERSION
 	WPD_CLIENT_MINOR_VERSION
@@ -76,6 +88,8 @@ const (
 	WPD_OBJECT_PERSISTENT_UNIQUE_ID
 	WPD_OBJECT_FORMAT
 	WPD_OBJECT_CONTENT_TYPE
+	WPD_OBJECT_SIZE
+	WPD_OBJECT_ORIGINAL_FILE_NAME
 
 	WPD_PROPERTY_ATTRIBUTE_FORM
 	WPD_PROPERTY_ATTRIBUTE_CAN_READ
@@ -92,14 +106,56 @@ const (
 )
 
 const (
-	WPD_DEVICE_OBJECT_ID = "DEVICE"
+	WPD_CONTENT_TYPE_FUNCTIONAL_OBJECT GUID = iota
+	WPD_CONTENT_TYPE_FOLDER
+	WPD_CONTENT_TYPE_IMAGE
+	WPD_CONTENT_TYPE_DOCUMENT
+	WPD_CONTENT_TYPE_CONTACT
+	WPD_CONTENT_TYPE_CONTACT_GROUP
+	WPD_CONTENT_TYPE_AUDIO
+	WPD_CONTENT_TYPE_VIDEO
+	WPD_CONTENT_TYPE_TELEVISION
+	WPD_CONTENT_TYPE_PLAYLIST
+	WPD_CONTENT_TYPE_MIXED_CONTENT_ALBUM
+	WPD_CONTENT_TYPE_AUDIO_ALBUM
+	WPD_CONTENT_TYPE_IMAGE_ALBUM
+	WPD_CONTENT_TYPE_VIDEO_ALBUM
+	WPD_CONTENT_TYPE_MEMO
+	WPD_CONTENT_TYPE_EMAIL
+	WPD_CONTENT_TYPE_APPOINTMENT
+	WPD_CONTENT_TYPE_TASK
+	WPD_CONTENT_TYPE_PROGRAM
+	WPD_CONTENT_TYPE_GENERIC_FILE
+	WPD_CONTENT_TYPE_CALENDAR
+	WPD_CONTENT_TYPE_GENERIC_MESSAGE
+	WPD_CONTENT_TYPE_NETWORK_ASSOCIATION
+	WPD_CONTENT_TYPE_CERTIFICATE
+	WPD_CONTENT_TYPE_WIRELESS_PROFILE
+	WPD_CONTENT_TYPE_MEDIA_CAST
+	WPD_CONTENT_TYPE_SECTION
+	WPD_CONTENT_TYPE_UNSPECIFIED
+	WPD_CONTENT_TYPE_ALL
+
+	WPD_OBJECT_FORMAT_EXIF
+	WPD_OBJECT_FORMAT_WMA
+	WPD_OBJECT_FORMAT_VCARD2
 )
 
 const (
-	GENERIC_READ = 0x80000000
-	GENERIC_WRITE = 0x40000000
-	GENERIC_EXECUTE = 0x20000000
-	GENERIC_ALL = 0x10000000
+	WPD_DEVICE_OBJECT_ID string = "DEVICE"
+)
+
+const (
+	GENERIC_READ = C.GENERIC_READ & 0xffffffff// 0x80000000
+	GENERIC_WRITE = C.GENERIC_WRITE & 0xffffffff// 0x40000000
+	GENERIC_EXECUTE = C.GENERIC_EXECUTE & 0xffffffff// 0x20000000
+	GENERIC_ALL = C.GENERIC_ALL & 0xffffffff// 0x10000000
+)
+
+const (
+	STATFLAG_DEFAULT = C.STATFLAG_DEFAULT
+	STATFLAG_NONAME = C.STATFLAG_NONAME
+	STATFLAG_NOOPEN = C.STATFLAG_NOOPEN
 )
 
 // C.WCHAR
@@ -113,8 +169,14 @@ type DWORD uint32
 type ULONG uint32
 // *WCHAR
 type PnPDeviceID C.PnPDeviceID
+// C.CLSID
+type CLSID int
+// C.IID
+type IID int
 // C.PROPERTYKEY
 type PropertyKey int
+// C.GUID
+type GUID int
 
 type IPortableDevice C.IPortableDevice
 type IPortableDeviceValues C.IPortableDeviceValues
@@ -127,95 +189,28 @@ type IPortableDeviceCapabilities C.IPortableDeviceCapabilities
 type IPortableDevicePropVariantCollection C.IPortableDevicePropVariantCollection
 type IPortableDeviceEventCallback C.IPortableDeviceEventCallback
 type IStream C.IStream
+type ISequentialStream C.ISequentialStream
+type IPropertyStore C.IPropertyStore
+type IUnknown C.IUnknown
 
 type IEnumPortableDeviceObjectIDs C.IEnumPortableDeviceObjectIDs
 
+type StatStg struct {
+	pwcsName string
+	_type uint32
+	cbSize uint64
+	mtime uint64
+	ctime uint64
+	atime uint64
+	grfMode uint32
+	grfLocksSupported uint32
+	clsid CLSID
+	grfStateBits uint32
+	reserved uint32
+}
+
 func (hr HRESULT) Error() string {
 	return fmt.Sprintf("error code: %s", hr.String())
-}
-
-func (hr HRESULT) String() string {
-	switch hr {
-	case S_OK:
-		return "S_OK"
-	case E_ABORT:
-		return "E_ABORT"
-	case E_ACCESSDENIED:
-		return "E_ACCESSDENIED"
-	case E_FAIL:
-		return "E_FAIL"
-	case E_HANDLE:
-		return "E_HANDLE"
-	case E_INVALIDARG:
-		return "E_INVALIDARG"
-	case E_NOINTERFACE:
-		return "E_NOINTERFACE"
-	case E_NOTIMPL:
-		return "E_NOTIMPL"
-	case E_OUTOFMEMORY:
-		return "E_OUTOFMEMORY"
-	case E_POINTER:
-		return "E_POINTER"
-	case E_UNEXPECTED:
-		return "E_UNEXPECTED"
-	case CO_E_NOTINITIALIZED:
-		return "CO_E_NOTINITIALIZED"
-	default:
-		return fmt.Sprintf("%#x", uint32(hr))
-	}
-}
-
-func (propertyKey PropertyKey) toCPropertyKey() *C.PROPERTYKEY {
-	switch propertyKey {
-	case WPD_CLIENT_NAME:
-		return &C.WPD_CLIENT_NAME
-	case WPD_CLIENT_MAJOR_VERSION:
-		return &C.WPD_CLIENT_MAJOR_VERSION
-	case WPD_CLIENT_MINOR_VERSION:
-		return &C.WPD_CLIENT_MINOR_VERSION
-	case WPD_CLIENT_REVISION:
-		return &C.WPD_CLIENT_REVISION
-	case WPD_CLIENT_SECURITY_QUALITY_OF_SERVICE:
-		return &C.WPD_CLIENT_SECURITY_QUALITY_OF_SERVICE
-	case WPD_CLIENT_DESIRED_ACCESS:
-		return &C.WPD_CLIENT_DESIRED_ACCESS
-	case WPD_OBJECT_PARENT_ID:
-		return &C.WPD_OBJECT_PARENT_ID
-	case WPD_OBJECT_NAME:
-		return &C.WPD_OBJECT_NAME
-	case WPD_OBJECT_PERSISTENT_UNIQUE_ID:
-		return &C.WPD_OBJECT_PERSISTENT_UNIQUE_ID
-	case WPD_OBJECT_FORMAT:
-		return &C.WPD_OBJECT_FORMAT
-	case WPD_OBJECT_CONTENT_TYPE:
-		return &C.WPD_OBJECT_CONTENT_TYPE
-	case WPD_PROPERTY_ATTRIBUTE_FORM:
-		return &C.WPD_PROPERTY_ATTRIBUTE_FORM
-	case WPD_PROPERTY_ATTRIBUTE_CAN_READ:
-		return &C.WPD_PROPERTY_ATTRIBUTE_CAN_READ
-	case WPD_PROPERTY_ATTRIBUTE_CAN_WRITE:
-		return &C.WPD_PROPERTY_ATTRIBUTE_CAN_WRITE
-	case WPD_PROPERTY_ATTRIBUTE_CAN_DELETE:
-		return &C.WPD_PROPERTY_ATTRIBUTE_CAN_DELETE
-	case WPD_PROPERTY_ATTRIBUTE_DEFAULT_VALUE:
-		return &C.WPD_PROPERTY_ATTRIBUTE_DEFAULT_VALUE
-	case WPD_PROPERTY_ATTRIBUTE_FAST_PROPERTY:
-		return &C.WPD_PROPERTY_ATTRIBUTE_FAST_PROPERTY
-	case WPD_PROPERTY_ATTRIBUTE_RANGE_MIN:
-		return &C.WPD_PROPERTY_ATTRIBUTE_RANGE_MIN
-	case WPD_PROPERTY_ATTRIBUTE_RANGE_MAX:
-		return &C.WPD_PROPERTY_ATTRIBUTE_RANGE_MAX
-	case WPD_PROPERTY_ATTRIBUTE_RANGE_STEP:
-		return &C.WPD_PROPERTY_ATTRIBUTE_RANGE_STEP
-	case WPD_PROPERTY_ATTRIBUTE_ENUMERATION_ELEMENTS:
-		return &C.WPD_PROPERTY_ATTRIBUTE_ENUMERATION_ELEMENTS
-	case WPD_PROPERTY_ATTRIBUTE_REGULAR_EXPRESSION:
-		return &C.WPD_PROPERTY_ATTRIBUTE_REGULAR_EXPRESSION
-	case WPD_PROPERTY_ATTRIBUTE_MAX_SIZE:
-		return &C.WPD_PROPERTY_ATTRIBUTE_MAX_SIZE
-	default:
-		panic("unexpected")
-	}
 }
 
 func Initialize() error {
@@ -396,6 +391,16 @@ func (pPortableDeviceValues *IPortableDeviceValues) GetUnsignedIntegerValue(key 
 	return uint32(value), nil
 }
 
+func (pPortableDeviceValues *IPortableDeviceValues) SetGuidValue(key PropertyKey, value GUID) error {
+	hr := C.portableDeviceValues_SetGuidValue((*C.IPortableDeviceValues)(pPortableDeviceValues), key.toCPropertyKey(), value.toCGUID())
+
+	if hr < 0 {
+		return HRESULT(hr)
+	}
+
+	return nil
+}
+
 func (pPortableDeviceValues *IPortableDeviceValues) SetStringValue(key PropertyKey, value string) error {
 	var (
 		pwstr C.PWSTR
@@ -431,6 +436,22 @@ func (pPortableDeviceValues *IPortableDeviceValues) SetUnsignedIntegerValue(key 
 	}
 
 	return nil
+}
+
+func (pPortableDeviceValeus *IPortableDeviceValues) SetUnsignedLargeIntegerValue(key PropertyKey, value uint64) error {
+	hr := C.portableDeviceValues_SetUnsignedLargeIntegerValue((*C.IPortableDeviceValues)(pPortableDeviceValeus), key.toCPropertyKey(), C.ULONGLONG(value))
+
+	if hr < 0 {
+		return HRESULT(hr)
+	}
+
+	return nil
+}
+
+func (pPortableDeviceValues *IPortableDeviceValues) QueryInterface(iid IID) (unsafe.Pointer, error) {
+	pUnknown := (*IUnknown)(unsafe.Pointer(pPortableDeviceValues))
+
+	return pUnknown.QueryInterface(iid)
 }
 
 func (pPortableDeviceValues *IPortableDeviceValues) Release() error {
@@ -650,6 +671,7 @@ func (pPortableDeviceProperties *IPortableDeviceProperties) GetPropertyAttribute
 	return (*IPortableDeviceValues)(pPortableDeviceValues), nil
 }
 
+// TODO not finished
 func (pPortableDeviceProperties *IPortableDeviceProperties) SetValues(objectID string, pValues *IPortableDeviceValues) error {
 	var (
 		pResults *C.IPortableDeviceValues
@@ -668,12 +690,40 @@ func (pPortableDeviceProperties *IPortableDeviceProperties) SetValues(objectID s
 
 	// TODO do something with pResults
 
+
 	err = (*IPortableDeviceValues)(pResults).Release()
 	if err != nil {
 		panic(err)
 	}
 
 	return nil
+}
+
+func (pPortableDeviceDataStream *IPortableDeviceDataStream) Commit(dataFlags int) error {
+	hr := C.portableDeviceDataStream_Commit((*C.IPortableDeviceDataStream)(pPortableDeviceDataStream), C.DWORD(dataFlags))
+
+	if hr < 0 {
+		return HRESULT(hr)
+	}
+
+	return nil
+}
+
+func (pPortableDeviceDataStream *IPortableDeviceDataStream) GetObjectID() (string, error) {
+	var (
+		pObjectID C.PWSTR
+	)
+
+	hr := C.portableDeviceDataStream_GetObjectID((*C.IPortableDeviceDataStream)(pPortableDeviceDataStream), &pObjectID)
+	defer C.CoTaskMemFree(C.LPVOID(pObjectID))
+
+	if hr < 0 {
+		return "", HRESULT(hr)
+	}
+
+	objectID := toGoString(pObjectID, C.DWORD(wcslen(pObjectID)))
+
+	return objectID, nil
 }
 
 // cObjects: Number of objects to request on each NEXT
@@ -714,6 +764,100 @@ func (pEnumObjectIDs *IEnumPortableDeviceObjectIDs) Next(cObjects uint32) ([]str
 	}
 
 	return objects, nil
+}
+
+func (pStream *IStream) Stat(statFlags uint32) (*StatStg, error) {
+	var (
+		statstg C.STATSTG
+	)
+
+	hr := C.stream_Stat((*C.IStream)(pStream), &statstg, C.DWORD(statFlags))
+
+	if hr < 0 {
+		return nil, HRESULT(hr)
+	}
+
+	result := new(StatStg)
+
+	if statFlags & STATFLAG_NONAME != 0 {
+		pwcsName := C.PWSTR(unsafe.Pointer(statstg.pwcsName))// nil if noname flags is set. if pwcsName is not nil, must call CoTaskMemFree method.
+		result.pwcsName = toGoString(pwcsName, C.DWORD(wcslen(pwcsName)))
+	}
+	result._type = uint32(statstg._type)
+	cbSize := [8]byte(statstg.cbSize)
+	result.cbSize = binary.BigEndian.Uint64(cbSize[:])// C.ULARGE_INTEGER 64bit(8byte, DWORD times 2) union
+	result.mtime = uint64(statstg.mtime.dwLowDateTime << 32 | statstg.mtime.dwHighDateTime)// C.FILETIME, struct contains two DWORD fields.
+	result.ctime = uint64(statstg.ctime.dwLowDateTime << 32 | statstg.ctime.dwHighDateTime)// C.FILETIME
+	result.atime = uint64(statstg.atime.dwLowDateTime << 32 | statstg.atime.dwHighDateTime)// C.FILETIME
+	result.grfMode = uint32(statstg.grfMode)
+	result.grfLocksSupported = uint32(statstg.grfLocksSupported)
+	result.clsid = 0//C.CLSID(statstg.clsid)
+	result.grfStateBits = uint32(statstg.grfStateBits)
+	result.reserved = uint32(statstg.reserved)
+
+	return result, nil
+}
+
+func (pSequentialStream *ISequentialStream) Read(buffer []byte, offset, length uint64) (uint32, error) {
+	var (
+		pBuffer C.LPVOID
+		cb C.ULONG = C.ULONG(length)
+		cbRead C.ULONG
+	)
+
+	pBuffer = C.LPVOID(C.malloc(C.size_t(length)))
+	defer C.free(unsafe.Pointer(pBuffer))
+
+	hr := C.sequentialStream_Read((*C.ISequentialStream)(pSequentialStream), pBuffer, cb, &cbRead)
+
+	if hr < 0 {
+		return 0, HRESULT(hr)
+	}
+
+	raw := (*[1 << 30]C.BYTE)(unsafe.Pointer(pBuffer))[:cbRead:cbRead]
+	for i := uint64(0); i < uint64(cbRead); i++ {
+		buffer[offset + i] = byte(raw[i])
+	}
+
+	return uint32(cbRead), nil
+}
+
+func (pSequentialStream *ISequentialStream) Write(buffer []byte, offset, length uint64) (uint32, error) {
+	var (
+		pBuffer C.LPVOID
+		cb C.ULONG = C.ULONG(length)
+		cbWritten C.ULONG
+	)
+
+	pBuffer = C.LPVOID(C.malloc(C.size_t(length)))
+	defer C.free(unsafe.Pointer(pBuffer))
+
+	raw := (*[1 << 30]C.BYTE)(unsafe.Pointer(pBuffer))[:length:length]
+	for i := uint64(0); i < length; i++ {
+		raw[i] = C.BYTE(buffer[offset + i])
+	}
+
+	hr := C.sequentialStream_Write((*C.ISequentialStream)(pSequentialStream), pBuffer, cb, &cbWritten)
+
+	if hr < 0 {
+		return 0, HRESULT(hr)
+	}
+
+	return uint32(cbWritten), nil
+}
+
+func (pUnknown *IUnknown) QueryInterface(iid IID) (unsafe.Pointer, error) {
+	var (
+		pObject C.LPVOID
+	)
+
+	hr := C.unknown_QueryInterface((*C.IUnknown)(pUnknown), iid.toCIID(), &pObject)
+
+	if hr < 0 {
+		return nil, HRESULT(hr)
+	}
+
+	return unsafe.Pointer(pObject), nil
 }
 
 // Convert PWSTR to GoString.
@@ -764,3 +908,38 @@ func allocatePWSTR(value string) (C.PWSTR, error) {
 
 	return C.PWSTR(pwstr), nil
 }
+
+func wcslen(pwstr C.PWSTR) int {
+	return int(C.wcslen((*C.wchar_t)(unsafe.Pointer(pwstr))))
+}
+
+/*
+static int wcslen(WCHAR* wstr)
+{
+  char str[MB_CUR_MAX];
+  char msg[80];
+  WCHAR* wptr;
+  int nbytes, i = 0;
+
+  wptr = wstr;
+
+  if ( wptr == NULL )
+     return 0;
+
+  while ( *wptr != L'\0' ) {
+     nbytes = wctomb ( str, *wptr );
+     i += nbytes; (char*)wptr += nbytes;
+  }
+  return i;
+}
+ */
+// Implementation of wcslen function.
+//func wcslen(pwstr C.PWSTR) int {
+//	s := unsafe.Pointer(pwstr)
+//	p := s
+//	for *(*C.WCHAR)(p) != 0 {
+//		p = unsafe.Pointer(uintptr(p) + uintptr(1))
+//	}
+//
+//	return int(uintptr(p) - uintptr(s))
+//}

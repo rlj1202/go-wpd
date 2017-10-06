@@ -113,12 +113,20 @@ HRESULT portableDeviceValues_GetUnsignedIntegerValue(IPortableDeviceValues *pPor
 	return pPortableDeviceValues->GetUnsignedIntegerValue(*key, value);
 }
 
+HRESULT portableDeviceValues_SetGuidValue(IPortableDeviceValues *pPortableDeviceValues, const PROPERTYKEY *key, GUID *pGuid) {
+	return pPortableDeviceValues->SetGuidValue(*key, *pGuid);
+}
+
 HRESULT portableDeviceValues_SetStringValue(IPortableDeviceValues *pPortableDeviceValues, const PROPERTYKEY *key, LPCWSTR value) {
 	return pPortableDeviceValues->SetStringValue(*key, value);
 }
 
 HRESULT portableDeviceValues_SetUnsignedIntegerValue(IPortableDeviceValues *pPortableDeviceValues, const PROPERTYKEY *key, const ULONG value) {
 	return pPortableDeviceValues->SetUnsignedIntegerValue(*key, value);
+}
+
+HRESULT portableDeviceValues_SetUnsignedLargeIntegerValue(IPortableDeviceValues *pPortableDeviceValues, const PROPERTYKEY *key, const ULONGLONG value) {
+	return pPortableDeviceValues->SetUnsignedLargeIntegerValue(*key, value);
 }
 
 HRESULT portableDeviceValues_Release(IPortableDeviceValues *pPortableDeviceValues) {
@@ -213,6 +221,14 @@ HRESULT portableDeviceProperties_SetValues(IPortableDeviceProperties *pPortableD
 	return pPortableDeviceProperties->SetValues(pObjectID, pValues, ppResults);
 }
 
+HRESULT portableDeviceDataStream_Commit(IPortableDeviceDataStream *pPortableDeviceDataStream, DWORD dataFlags) {
+	return pPortableDeviceDataStream->Commit(dataFlags);
+}
+
+HRESULT portableDeviceDataStream_GetObjectID(IPortableDeviceDataStream *pPortableDeviceDataStream, PWSTR *pObjectID) {
+	return pPortableDeviceDataStream->GetObjectID(pObjectID);
+}
+
 HRESULT enumPortableDeviceObjectIDs_Next(IEnumPortableDeviceObjectIDs *pEnumObjectIDs, ULONG cObjects, PWSTR *pObjIDs, DWORD *pcObjIDs, ULONG *pcPetched) {
 	HRESULT hr = pEnumObjectIDs->Next(cObjects, pObjIDs, pcPetched);
 	if (SUCCEEDED(hr)) {
@@ -224,9 +240,25 @@ HRESULT enumPortableDeviceObjectIDs_Next(IEnumPortableDeviceObjectIDs *pEnumObje
 	return hr;
 }
 
+HRESULT stream_Stat(IStream *pStream, STATSTG *pStatstg, DWORD statFlags) {
+	return pStream->Stat(pStatstg, statFlags);
+}
+
+HRESULT sequentialStream_Read(ISequentialStream *pSequentialStream, LPVOID pBuffer, ULONG cb, ULONG *pcbRead) {
+	return pSequentialStream->Read(pBuffer, cb, pcbRead);
+}
+
+HRESULT sequentialStream_Write(ISequentialStream *pSequentialStream, LPVOID pBuffer, ULONG cb, ULONG *pcbWritten) {
+	return pSequentialStream->Write(pBuffer, cb, pcbWritten);
+}
+
+HRESULT unknown_QueryInterface(IUnknown *pUnknown, const IID *piid, LPVOID *ppvObject) {
+	return pUnknown->QueryInterface(*piid, ppvObject);
+}
+
 void test() {
 	const PROPERTYKEY & test = WPD_CLIENT_NAME;
-
+	
 	IPortableDeviceManager *pPortableDeviceManager;
 
 	HRESULT hr = CoCreateInstance(CLSID_PortableDeviceManager,

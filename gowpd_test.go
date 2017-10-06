@@ -27,10 +27,6 @@ func TestAll(t *testing.T) {
 	pClientInfo.SetUnsignedIntegerValue(gowpd.WPD_CLIENT_MAJOR_VERSION, 1)
 	pClientInfo.SetUnsignedIntegerValue(gowpd.WPD_CLIENT_MINOR_VERSION, 0)
 	pClientInfo.SetUnsignedIntegerValue(gowpd.WPD_CLIENT_REVISION, 2)
-	pClientInfo.GetStringValue(gowpd.WPD_CLIENT_NAME)
-	pClientInfo.GetUnsignedIntegerValue(gowpd.WPD_CLIENT_MAJOR_VERSION)
-	pClientInfo.GetUnsignedIntegerValue(gowpd.WPD_CLIENT_MINOR_VERSION)
-	pClientInfo.GetUnsignedIntegerValue(gowpd.WPD_CLIENT_REVISION)
 
 	for _, id := range deviceIDs {
 		friendlyName, err := pPortableDeviceManager.GetDeviceFriendlyName(id)
@@ -60,33 +56,31 @@ func TestAll(t *testing.T) {
 			panic(err)
 		}
 
-		content, err := pPortableDevice.Content()
+		//objectID := "F:\"
+		_, err = pPortableDevice.Content()
 		if err != nil {
 			panic(err)
 		}
-		pEnumObjects, err := content.EnumObjects(gowpd.WPD_DEVICE_OBJECT_ID)
-		if err != nil {
-			panic(err)
-		}
-		objects, err := pEnumObjects.Next(10)
-		if err != nil {
-			panic(err)
-		}
-		for _, obj := range objects {
-			fmt.Println(obj)
 
-			test, _ := content.EnumObjects(obj)
-			tests, _ := test.Next(30)
-			for _, t := range tests {
-				fmt.Println(t)
-			}
-		}
+		// select file to transfer to device.
+
+		// open file as IStream
+
+		// acquire properties needed to transfer file to device
+
+		// transfer file to device
+
+		//var pObjectProperties *gowpd.IPortableDeviceValues
+		//
+		//_, err = content.CreateObjectWithPropertiesAndData(pObjectProperties)
+		//if err != nil {
+		//	panic(err)
+		//}
 
 		gowpd.FreeDeviceID(id)
 		pPortableDevice.Release()
 	}
 
 	pPortableDeviceManager.Release()
-
 	gowpd.Uninitialize()
 }

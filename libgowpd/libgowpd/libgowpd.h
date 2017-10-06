@@ -7,6 +7,11 @@ extern "C" {
 #endif
 
 	typedef WCHAR *PnPDeviceID;
+	
+	extern const CLSID CLSID_PortableDeviceManager;
+
+	extern const IID IID_IPortableDeviceValues;
+	extern const IID IID_IPortableDeviceDataStream;
 
 	extern const PROPERTYKEY WPD_CLIENT_NAME;
 	extern const PROPERTYKEY WPD_CLIENT_MAJOR_VERSION;
@@ -20,6 +25,8 @@ extern "C" {
 	extern const PROPERTYKEY WPD_OBJECT_PERSISTENT_UNIQUE_ID;
 	extern const PROPERTYKEY WPD_OBJECT_FORMAT;
 	extern const PROPERTYKEY WPD_OBJECT_CONTENT_TYPE;
+	extern const PROPERTYKEY WPD_OBJECT_SIZE;
+	extern const PROPERTYKEY WPD_OBJECT_ORIGINAL_FILE_NAME;
 
 	extern const PROPERTYKEY WPD_PROPERTY_ATTRIBUTE_FORM;
 	extern const PROPERTYKEY WPD_PROPERTY_ATTRIBUTE_CAN_READ;
@@ -34,6 +41,40 @@ extern "C" {
 	extern const PROPERTYKEY WPD_PROPERTY_ATTRIBUTE_REGULAR_EXPRESSION;
 	extern const PROPERTYKEY WPD_PROPERTY_ATTRIBUTE_MAX_SIZE;
 
+	extern const GUID WPD_CONTENT_TYPE_FUNCTIONAL_OBJECT;
+	extern const GUID WPD_CONTENT_TYPE_FOLDER;
+	extern const GUID WPD_CONTENT_TYPE_IMAGE;
+	extern const GUID WPD_CONTENT_TYPE_DOCUMENT;
+	extern const GUID WPD_CONTENT_TYPE_CONTACT;
+	extern const GUID WPD_CONTENT_TYPE_CONTACT_GROUP;
+	extern const GUID WPD_CONTENT_TYPE_AUDIO;
+	extern const GUID WPD_CONTENT_TYPE_VIDEO;
+	extern const GUID WPD_CONTENT_TYPE_TELEVISION;
+	extern const GUID WPD_CONTENT_TYPE_PLAYLIST;
+	extern const GUID WPD_CONTENT_TYPE_MIXED_CONTENT_ALBUM;
+	extern const GUID WPD_CONTENT_TYPE_AUDIO_ALBUM;
+	extern const GUID WPD_CONTENT_TYPE_IMAGE_ALBUM;
+	extern const GUID WPD_CONTENT_TYPE_VIDEO_ALBUM;
+	extern const GUID WPD_CONTENT_TYPE_MEMO;
+	extern const GUID WPD_CONTENT_TYPE_EMAIL;
+	extern const GUID WPD_CONTENT_TYPE_APPOINTMENT;
+	extern const GUID WPD_CONTENT_TYPE_TASK;
+	extern const GUID WPD_CONTENT_TYPE_PROGRAM;
+	extern const GUID WPD_CONTENT_TYPE_GENERIC_FILE;
+	extern const GUID WPD_CONTENT_TYPE_CALENDAR;
+	extern const GUID WPD_CONTENT_TYPE_GENERIC_MESSAGE;
+	extern const GUID WPD_CONTENT_TYPE_NETWORK_ASSOCIATION;
+	extern const GUID WPD_CONTENT_TYPE_CERTIFICATE;
+	extern const GUID WPD_CONTENT_TYPE_WIRELESS_PROFILE;
+	extern const GUID WPD_CONTENT_TYPE_MEDIA_CAST;
+	extern const GUID WPD_CONTENT_TYPE_SECTION;
+	extern const GUID WPD_CONTENT_TYPE_UNSPECIFIED;
+	extern const GUID WPD_CONTENT_TYPE_ALL;
+
+	extern const GUID WPD_OBJECT_FORMAT_EXIF;
+	extern const GUID WPD_OBJECT_FORMAT_WMA;
+	extern const GUID WPD_OBJECT_FORMAT_VCARD2;
+
 	typedef struct IPortableDevice IPortableDevice;
 	typedef struct IPortableDeviceValues IPortableDeviceValues;
 	typedef struct IPortableDeviceManager IPortableDeviceManager;
@@ -45,7 +86,10 @@ extern "C" {
 	typedef struct IPortableDevicePropVariantCollection IPortableDevicePropVariantCollection;
 	typedef struct IPortableDeviceEventCallback IPortableDeviceEventCallback;
 	typedef struct IStream IStream;
-
+	typedef struct ISequentialStream ISequentialStream;
+	typedef struct IPropertyStore IPropertyStore;
+	typedef struct IUnknown IUnknown;
+	
 	typedef struct IEnumPortableDeviceObjectIDs IEnumPortableDeviceObjectIDs;
 	
 	HRESULT createPortableDevice(IPortableDevice **ppPortableDevice);
@@ -67,8 +111,10 @@ extern "C" {
 	HRESULT portableDeviceValues_GetBoolValue(IPortableDeviceValues *pPortableDeviceValues, const PROPERTYKEY *key, BOOL *value);
 	HRESULT portableDeviceValues_GetStringValue(IPortableDeviceValues *pPortableDeviceValues, const PROPERTYKEY *key, PWSTR *value, DWORD *cValue);
 	HRESULT portableDeviceValues_GetUnsignedIntegerValue(IPortableDeviceValues *pPortableDeviceValues, const PROPERTYKEY *key, ULONG *value);
+	HRESULT portableDeviceValues_SetGuidValue(IPortableDeviceValues *pPortableDeviceValues, const PROPERTYKEY *key, GUID *pGuid);
 	HRESULT portableDeviceValues_SetStringValue(IPortableDeviceValues *pPortableDeviceValues, const PROPERTYKEY *key, LPCWSTR value);
 	HRESULT portableDeviceValues_SetUnsignedIntegerValue(IPortableDeviceValues *pPortableDeviceValues, const PROPERTYKEY *key, const ULONG value);
+	HRESULT portableDeviceValues_SetUnsignedLargeIntegerValue(IPortableDeviceValues *pPortableDeviceValues, const PROPERTYKEY *key, const ULONGLONG value);
 	HRESULT portableDeviceValues_Release(IPortableDeviceValues *pPortableDeviceValues);
 
 	HRESULT portableDeviceManager_GetDevices(IPortableDeviceManager *pPortableDeviceManager, PnPDeviceID **pPnPDeviceIDs, DWORD *cPnPDeviceIDs);
@@ -86,7 +132,17 @@ extern "C" {
 	HRESULT portableDeviceProperties_GetPropertyAttributes(IPortableDeviceProperties *pPortableDeviceProperties, PWSTR pObjectID, const PROPERTYKEY *key, IPortableDeviceValues **ppAttributes);
 	HRESULT portableDeviceProperties_SetValues(IPortableDeviceProperties *pPortableDeviceProperties, PWSTR pObjectID, IPortableDeviceValues *pValues, IPortableDeviceValues **ppResults);
 
+	HRESULT portableDeviceDataStream_Commit(IPortableDeviceDataStream *pPortableDeviceDataStream, DWORD dataFlags);
+	HRESULT portableDeviceDataStream_GetObjectID(IPortableDeviceDataStream *pPortableDeviceDataStream, PWSTR *pObjectID);
+
 	HRESULT enumPortableDeviceObjectIDs_Next(IEnumPortableDeviceObjectIDs *pEnumObjectIDs, ULONG cObjects, PWSTR *pObjIDs, DWORD *pcObjIDs, ULONG *pcPetched);
+
+	HRESULT stream_Stat(IStream *pStream, STATSTG *pStatstg, DWORD statFlags);
+
+	HRESULT sequentialStream_Read(ISequentialStream *pSequentialStream, LPVOID pBuffer, ULONG cb, ULONG *pcbRead);
+	HRESULT sequentialStream_Write(ISequentialStream *pSequentialStream, LPVOID pBuffer, ULONG cb, ULONG *pcbWritten);
+	
+	HRESULT unknown_QueryInterface(IUnknown *pUnknown, const IID *piid, LPVOID *ppvObject);
 
 	void test();
 

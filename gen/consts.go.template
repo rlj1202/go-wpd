@@ -1,0 +1,64 @@
+//
+// DO NOT EDIT! THIS IS AUTO-GENERATED FILE FROM gowpd.go USING gen/genconst.go
+//
+
+package gowpd
+
+// #include <libgowpd.h>
+import "C"
+import "fmt"
+
+func (hr HRESULT) String() string {
+	switch hr {
+	{{range $i, $h := $.HRESULTS -}}
+	case {{$h}}:
+		return "{{$h}}"
+	{{end -}}
+	default:
+		return fmt.Sprintf("%#x", uint32(hr))
+	}
+}
+
+func (clsid CLSID) toCCLSID() *C.CLSID {
+	switch clsid {
+	{{range $i, $c := $.CLSIDS -}}
+	case {{$c}}:
+		return &C.{{$c}}
+	{{end -}}
+	default:
+		panic("unexpected")
+	}
+}
+
+func (guid GUID) toCGUID() *C.GUID {
+	switch guid {
+	{{range $i, $g := $.GUIDS -}}
+	case {{$g}}:
+		return &C.{{$g}}
+	{{end -}}
+	default:
+		panic("unexpected")
+	}
+}
+
+func (propertyKey PropertyKey) toCPropertyKey() *C.PROPERTYKEY {
+	switch propertyKey {
+	{{range $i, $p := $.PROPERTYKEYS -}}
+	case {{$p}}:
+		return &C.{{$p}}
+	{{end -}}
+	default:
+		panic("unexpected")
+	}
+}
+
+func (iid IID) toCIID() *C.IID {
+	switch iid {
+	{{range $i, $iid := $.IIDS -}}
+	case {{$iid}}:
+		return &C.{{$iid}}
+	{{end -}}
+	default:
+		panic("unexpected")
+	}
+}
