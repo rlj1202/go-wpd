@@ -33,14 +33,12 @@ func Example_deviceEnumerate() {
 		}
 
 		log.Printf("[%d]:\n", i)
-		log.Printf("Name:         %s\n", friendlyName)
-		log.Printf("Manufacturer: %s\n", manufacturer)
-		log.Printf("Description:  %s\n", description)
+		log.Printf("\tName:         %s\n", friendlyName)
+		log.Printf("\tManufacturer: %s\n", manufacturer)
+		log.Printf("\tDescription:  %s\n", description)
 
 		gowpd.FreeDeviceID(deviceID)
 	}
 
 	gowpd.Uninitialize()
-
-	// Output:
 }

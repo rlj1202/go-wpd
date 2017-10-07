@@ -32,8 +32,8 @@ package gowpd
 //go:generate go run gen/genconst.go
 
 /*
-#cgo windows CFLAGS: -I "${SRCDIR}/libgowpd/libgowpd"
-#cgo windows LDFLAGS: -L "${SRCDIR}/libgowpd/x64/Debug" -llibgowpd -lOle32
+#cgo windows amd64 CFLAGS: -I "${SRCDIR}/libgowpd/libgowpd"
+#cgo windows amd64 LDFLAGS: -L "${SRCDIR}/libgowpd/x64/Debug" -llibgowpd -lOle32
 //-lPortableDeviceGuids -luuid
 
 #include "libgowpd.h"
@@ -158,6 +158,10 @@ const (
 	STATFLAG_NOOPEN = C.STATFLAG_NOOPEN
 )
 
+const (
+	STGM_READ = C.STGM_READ
+)
+
 // C.WCHAR
 // 16bit-encoded
 type WCHAR uint16;
@@ -214,6 +218,8 @@ func (hr HRESULT) Error() string {
 }
 
 func Initialize() error {
+	log.Println("Initialize():")
+
 	hr := C.CoInitializeEx(nil, C.COINIT_MULTITHREADED)
 	if (hr < 0) {
 		return HRESULT(hr)
@@ -223,6 +229,8 @@ func Initialize() error {
 }
 
 func Uninitialize() {
+	log.Println("Uninitialize():")
+
 	C.CoUninitialize()
 }
 
@@ -409,7 +417,12 @@ func (pPortableDeviceValues *IPortableDeviceValues) SetStringValue(key PropertyK
 	log.Println("SetStringValue(): Ready")
 
 	pwstr = C.PWSTR(C.malloc(C.size_t(C.sizeof_WCHAR * (len(value) + 1))))
+	if pwstr == nil {
+		return E_POINTER
+	}
 	defer C.free(unsafe.Pointer(pwstr))
+
+	log.Println("SetStringValue(): memory allocated")
 
 	raw := (*[1 << 30]C.WCHAR)(unsafe.Pointer(pwstr))[:len(value) + 1:len(value) + 1]
 	for i, char := range []byte(value) {
@@ -422,6 +435,8 @@ func (pPortableDeviceValues *IPortableDeviceValues) SetStringValue(key PropertyK
 	if hr < 0 {
 		return HRESULT(hr)
 	}
+
+	log.Printf("SetStringValue(): {hresult: %#x}\n", hr)
 
 	return nil
 }
@@ -493,8 +508,10 @@ func (pPortableDeviceManager *IPortableDeviceManager) GetDevices() ([]PnPDeviceI
 func (pPortableDeviceManager *IPortableDeviceManager) GetDeviceFriendlyName(pnpDeviceID PnPDeviceID) (string, error) {
 	var (
 		pFriendlyName C.PWSTR
-		cFriendlyName C.DWORD
+		cFriendlyName C.DWORD = 0
 	)
+
+	log.Println("GetDeviceFriendlyName(): Ready")
 
 	hr := C.portableDeviceManager_GetDeviceFriendlyName((*C.struct_IPortableDeviceManager)(pPortableDeviceManager), pnpDeviceID, &pFriendlyName, &cFriendlyName)
 	defer C.free(unsafe.Pointer(pFriendlyName))
@@ -503,17 +520,17 @@ func (pPortableDeviceManager *IPortableDeviceManager) GetDeviceFriendlyName(pnpD
 		return "", HRESULT(hr)
 	}
 
-	str := toGoString(pFriendlyName, cFriendlyName)
+	str := toGoString(pFriendlyName, uint32(cFriendlyName))
 
-	log.Printf("GetDeviceFriendlyName(): %s\n", string(str))
+	log.Printf("GetDeviceFriendlyName(): %s\n", str)
 
-	return string(str), nil
+	return str, nil
 }
 
 func (pPortableDeviceManager *IPortableDeviceManager) GetDeviceManufacturer(pnpDeviceID PnPDeviceID) (string, error) {
 	var (
 		pManufacturer C.PWSTR
-		cManufacturer C.DWORD
+		cManufacturer C.DWORD = 0
 	)
 
 	hr := C.portableDeviceManager_GetDeviceManufacturer((*C.IPortableDeviceManager)(pPortableDeviceManager), pnpDeviceID, &pManufacturer, &cManufacturer)
@@ -523,21 +540,17 @@ func (pPortableDeviceManager *IPortableDeviceManager) GetDeviceManufacturer(pnpD
 		return "", HRESULT(hr)
 	}
 
-	raw := (*[1 << 30]C.WCHAR)(unsafe.Pointer(pManufacturer))[:cManufacturer:cManufacturer]
-	str := make([]byte, uint32(cManufacturer))
-	for i, wchar := range raw {
-		str[i] = byte(wchar)
-	}
+	str := toGoString(pManufacturer, uint32(cManufacturer))
 
-	log.Printf("GetDeviceManufacturer(): %s\n", string(str))
+	log.Printf("GetDeviceManufacturer(): %s\n", str)
 
-	return string(str), nil
+	return str, nil
 }
 
 func (pPortableDeviceManager *IPortableDeviceManager) GetDeviceDescription(pnpDeviceID PnPDeviceID) (string, error) {
 	var (
 		pDescription C.PWSTR
-		cDescription C.DWORD
+		cDescription C.DWORD = 0
 	)
 
 	hr := C.portableDeviceManager_GetDeviceDescription((*C.IPortableDeviceManager)(pPortableDeviceManager), pnpDeviceID, &pDescription, &cDescription)
@@ -547,15 +560,11 @@ func (pPortableDeviceManager *IPortableDeviceManager) GetDeviceDescription(pnpDe
 		return "", HRESULT(hr)
 	}
 
-	raw := (*[1 << 30]C.WCHAR)(unsafe.Pointer(pDescription))[:cDescription:cDescription]
-	str := make([]byte, uint32(cDescription))
-	for i, wchar := range raw {
-		str[i] = byte(wchar)
-	}
+	str := toGoString(pDescription, uint32(cDescription))
 
-	log.Printf("GetDeviceDescription(): %s\n", string(str))
+	log.Printf("GetDeviceDescription(): %s\n", str)
 
-	return string(str), nil
+	return str, nil
 }
 
 func (pPortableDeviceManager *IPortableDeviceManager) Release() {
@@ -563,7 +572,7 @@ func (pPortableDeviceManager *IPortableDeviceManager) Release() {
 }
 
 // TODO not finished
-func (pPortableDeviceContent *IPortableDeviceContent) CreateObjectWithPropertiesAndData(pValues *IPortableDeviceValues) (*IStream, error) {
+func (pPortableDeviceContent *IPortableDeviceContent) CreateObjectWithPropertiesAndData(pValues *IPortableDeviceValues) (*IStream, uint32, error) {
 	var (
 		pData *C.IStream
 		optimalWriteBufferSize C.DWORD = 0// TRUE for ignoring
@@ -573,10 +582,12 @@ func (pPortableDeviceContent *IPortableDeviceContent) CreateObjectWithProperties
 	hr := C.portableDeviceContent_CreateObjectWithPropertiesAndData((*C.IPortableDeviceContent)(pPortableDeviceContent), (*C.IPortableDeviceValues)(pValues), &pData, &optimalWriteBufferSize, &pCookie)
 
 	if hr < 0 {
-		return nil, HRESULT(hr)
+		return nil, 0, HRESULT(hr)
 	}
 
-	return (*IStream)(pData), nil
+	log.Printf("CreateObjectWithPropertiesAndData(): {optimalWriteBufferSize: %d}\n", optimalWriteBufferSize)
+
+	return (*IStream)(pData), uint32(optimalWriteBufferSize), nil
 }
 
 // TODO not finished
@@ -699,14 +710,18 @@ func (pPortableDeviceProperties *IPortableDeviceProperties) SetValues(objectID s
 	return nil
 }
 
-func (pPortableDeviceDataStream *IPortableDeviceDataStream) Commit(dataFlags int) error {
-	hr := C.portableDeviceDataStream_Commit((*C.IPortableDeviceDataStream)(pPortableDeviceDataStream), C.DWORD(dataFlags))
+func (pPortableDeviceDataStream *IPortableDeviceDataStream) Commit(dataFlags uint32) error {
+	//hr := C.portableDeviceDataStream_Commit((*C.IPortableDeviceDataStream)(pPortableDeviceDataStream), C.DWORD(dataFlags))
+	//
+	//if hr < 0 {
+	//	return HRESULT(hr)
+	//}
+	//
+	//return nil
 
-	if hr < 0 {
-		return HRESULT(hr)
-	}
+	pStream := (*IStream)(unsafe.Pointer(pPortableDeviceDataStream))
 
-	return nil
+	return pStream.Commit(dataFlags)
 }
 
 func (pPortableDeviceDataStream *IPortableDeviceDataStream) GetObjectID() (string, error) {
@@ -721,7 +736,7 @@ func (pPortableDeviceDataStream *IPortableDeviceDataStream) GetObjectID() (strin
 		return "", HRESULT(hr)
 	}
 
-	objectID := toGoString(pObjectID, C.DWORD(wcslen(pObjectID)))
+	objectID := toGoString(pObjectID, wcslen(pObjectID))
 
 	return objectID, nil
 }
@@ -751,19 +766,29 @@ func (pEnumObjectIDs *IEnumPortableDeviceObjectIDs) Next(cObjects uint32) ([]str
 	}
 
 	rawPWSTR := (*[1 << 30]C.PWSTR)(unsafe.Pointer(pObjIDs))[:cPetched:cPetched]
-	rawDWORD := (*[1 << 30]C.DWORD)(unsafe.Pointer(cObjIDs))[:cPetched:cPetched]
+	//rawDWORD := (*[1 << 30]C.DWORD)(unsafe.Pointer(cObjIDs))[:cPetched:cPetched]// TODO delete
 
 	objects := make([]string, ULONG(cPetched))
 	for i, pwstr := range rawPWSTR {
-		str := toGoString(pwstr, rawDWORD[i])
+		str := toGoString(pwstr, wcslen(pwstr))
 		objects[i] = str
 
-		log.Printf("Next(): {object: %s, length: %d}\n", str, DWORD(rawDWORD[i]))
+		log.Printf("Next(): {object: %s}\n", str)
 
 		C.CoTaskMemFree(C.LPVOID(pwstr))
 	}
 
 	return objects, nil
+}
+
+func (pStream *IStream) Commit(dataFlag uint32) error {
+	hr := C.stream_Commit((*C.IStream)(pStream), C.DWORD(dataFlag))
+
+	if hr < 0 {
+		return HRESULT(hr)
+	}
+
+	return nil
 }
 
 func (pStream *IStream) Stat(statFlags uint32) (*StatStg, error) {
@@ -779,9 +804,9 @@ func (pStream *IStream) Stat(statFlags uint32) (*StatStg, error) {
 
 	result := new(StatStg)
 
-	if statFlags & STATFLAG_NONAME != 0 {
+	if statFlags & STATFLAG_NONAME == 0 {
 		pwcsName := C.PWSTR(unsafe.Pointer(statstg.pwcsName))// nil if noname flags is set. if pwcsName is not nil, must call CoTaskMemFree method.
-		result.pwcsName = toGoString(pwcsName, C.DWORD(wcslen(pwcsName)))
+		result.pwcsName = toGoString(pwcsName, wcslen(pwcsName))
 	}
 	result._type = uint32(statstg._type)
 	cbSize := [8]byte(statstg.cbSize)
@@ -798,14 +823,32 @@ func (pStream *IStream) Stat(statFlags uint32) (*StatStg, error) {
 	return result, nil
 }
 
-func (pSequentialStream *ISequentialStream) Read(buffer []byte, offset, length uint64) (uint32, error) {
+func (pStream *IStream) QueryInterface(iid IID) (unsafe.Pointer, error) {
+	pUnknown := (*IUnknown)(unsafe.Pointer(pStream))
+
+	return pUnknown.QueryInterface(iid)
+}
+
+func (pStream *IStream) Read(buffer []byte) (uint32, error) {
+	pSequentialStream := (*ISequentialStream)(unsafe.Pointer(pStream))
+
+	return pSequentialStream.Read(buffer)
+}
+
+func (pStream *IStream) Write(buffer []byte) (uint32, error) {
+	pSequentialStream := (*ISequentialStream)(unsafe.Pointer(pStream))
+
+	return pSequentialStream.Write(buffer)
+}
+
+func (pSequentialStream *ISequentialStream) Read(buffer []byte) (uint32, error) {
 	var (
 		pBuffer C.LPVOID
-		cb C.ULONG = C.ULONG(length)
+		cb C.ULONG = C.ULONG(len(buffer))
 		cbRead C.ULONG
 	)
 
-	pBuffer = C.LPVOID(C.malloc(C.size_t(length)))
+	pBuffer = C.LPVOID(C.malloc(C.size_t(len(buffer))))
 	defer C.free(unsafe.Pointer(pBuffer))
 
 	hr := C.sequentialStream_Read((*C.ISequentialStream)(pSequentialStream), pBuffer, cb, &cbRead)
@@ -816,25 +859,25 @@ func (pSequentialStream *ISequentialStream) Read(buffer []byte, offset, length u
 
 	raw := (*[1 << 30]C.BYTE)(unsafe.Pointer(pBuffer))[:cbRead:cbRead]
 	for i := uint64(0); i < uint64(cbRead); i++ {
-		buffer[offset + i] = byte(raw[i])
+		buffer[i] = byte(raw[i])
 	}
 
 	return uint32(cbRead), nil
 }
 
-func (pSequentialStream *ISequentialStream) Write(buffer []byte, offset, length uint64) (uint32, error) {
+func (pSequentialStream *ISequentialStream) Write(buffer []byte) (uint32, error) {
 	var (
 		pBuffer C.LPVOID
-		cb C.ULONG = C.ULONG(length)
+		cb C.ULONG = C.ULONG(len(buffer))
 		cbWritten C.ULONG
 	)
 
-	pBuffer = C.LPVOID(C.malloc(C.size_t(length)))
+	pBuffer = C.LPVOID(C.malloc(C.size_t(len(buffer))))
 	defer C.free(unsafe.Pointer(pBuffer))
 
-	raw := (*[1 << 30]C.BYTE)(unsafe.Pointer(pBuffer))[:length:length]
-	for i := uint64(0); i < length; i++ {
-		raw[i] = C.BYTE(buffer[offset + i])
+	raw := (*[1 << 30]C.BYTE)(unsafe.Pointer(pBuffer))[:len(buffer):len(buffer)]
+	for i := uint64(0); i < uint64(len(buffer)); i++ {
+		raw[i] = C.BYTE(buffer[i])
 	}
 
 	hr := C.sequentialStream_Write((*C.ISequentialStream)(pSequentialStream), pBuffer, cb, &cbWritten)
@@ -863,7 +906,7 @@ func (pUnknown *IUnknown) QueryInterface(iid IID) (unsafe.Pointer, error) {
 // Convert PWSTR to GoString.
 // PWSTR is null-terminated string. So maybe cStr has bigger size than actual length of str by 1 byte.
 // PWSTR is utf-16 formatted. It converts utf-16 format into utf-8 format which Go-lang originally supports.
-func toGoString(str C.PWSTR, cStr C.DWORD) string {
+func toGoString(str C.PWSTR, cStr uint32) string {
 	raw := (*[1 << 30]C.WCHAR)(unsafe.Pointer(str))[:cStr:cStr]
 	utf16Str := make([]uint16, DWORD(cStr))
 	for i, wchar := range raw {
@@ -909,8 +952,8 @@ func allocatePWSTR(value string) (C.PWSTR, error) {
 	return C.PWSTR(pwstr), nil
 }
 
-func wcslen(pwstr C.PWSTR) int {
-	return int(C.wcslen((*C.wchar_t)(unsafe.Pointer(pwstr))))
+func wcslen(pwstr C.PWSTR) uint32 {
+	return uint32(C.wcslen((*C.wchar_t)(unsafe.Pointer(pwstr))))
 }
 
 /*

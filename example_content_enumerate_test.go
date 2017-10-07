@@ -76,5 +76,4 @@ func Example_contentEnumerate() {
 	}
 
 	gowpd.Uninitialize()
-	// Output:
 }

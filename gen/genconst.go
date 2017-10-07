@@ -10,6 +10,9 @@ import (
 	"os"
 )
 
+/*
+Contains names of consts in gowpd.go
+ */
 type Consts struct {
 	HRESULTS []string
 	CLSIDS []string

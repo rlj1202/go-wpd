@@ -10,7 +10,9 @@ func Example_transferToDevice() {
 		panic(err)
 	}
 	deviceIDs, err := mng.GetDevices()
-
+	if err != nil {
+		panic(err)
+	}
 
 
 	for _, id := range deviceIDs {
@@ -18,6 +20,4 @@ func Example_transferToDevice() {
 	}
 
 	gowpd.Uninitialize()
-
-	// Output:
 }

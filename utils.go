@@ -1,13 +1,21 @@
 package gowpd
 
-import "path/filepath"
+import (
+	"path/filepath"
+	"log"
+)
 
 func GetRequiredPropertiesForAllContentTypes(pObjectProperties *IPortableDeviceValues, parentObjectID, filePath string, pFileStream *IStream) error {
+	log.Println("GetRequiredPropertiesForAllContentTypes(): Ready")
+
 	err := pObjectProperties.SetStringValue(WPD_OBJECT_PARENT_ID, parentObjectID)
 	if err != nil {
 		return err
 	}
 
+	if pFileStream == nil {
+		return E_POINTER
+	}
 	statstg, err := pFileStream.Stat(STATFLAG_NONAME)
 	if err != nil {
 		return err
@@ -27,6 +35,8 @@ func GetRequiredPropertiesForAllContentTypes(pObjectProperties *IPortableDeviceV
 }
 
 func GetRequiredPropertiesForContentType(contentType GUID, parentObjectID, filePath string, pFileStream *IStream) (*IPortableDeviceValues, error) {
+	log.Println("GetRequiredPropertiesForContentType(): Ready")
+
 	pObjectProperties, err := CreatePortableDeviceValues()
 	if pObjectProperties == nil {
 		return nil, E_UNEXPECTED
@@ -101,4 +111,32 @@ func GetRequiredPropertiesForContactContentTypes(pObjectProperties *IPortableDev
 	}
 
 	return nil
+}
+
+func StreamCopy(pDestStream *IStream, pSourceStream *IStream, cbTransferSize uint32) (uint32, error) {
+	pObjectData := make([]byte, cbTransferSize)
+
+	cbTotalBytesRead := uint32(0)
+	cbTotalBytesWritten := uint32(0)
+
+	for {
+		cbBytesRead, err := pSourceStream.Read(pObjectData)
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("StreamCopy(): Read %d bytes.\n", cbBytesRead)
+
+		if cbBytesRead <= 0 {
+			break
+		}
+
+		cbTotalBytesRead += cbBytesRead
+		cbBytesWritten, err := pDestStream.Write(pObjectData[:cbBytesRead])
+		if err != nil {
+			panic(err)
+		}
+		cbTotalBytesWritten += cbBytesWritten
+	}
+
+	return cbTotalBytesWritten, nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/rlj1202/go-wpd"
 	"testing"
+	"log"
 )
 
 func TestAll(t *testing.T) {
@@ -28,7 +29,7 @@ func TestAll(t *testing.T) {
 	pClientInfo.SetUnsignedIntegerValue(gowpd.WPD_CLIENT_MINOR_VERSION, 0)
 	pClientInfo.SetUnsignedIntegerValue(gowpd.WPD_CLIENT_REVISION, 2)
 
-	for _, id := range deviceIDs {
+	for i, id := range deviceIDs {
 		friendlyName, err := pPortableDeviceManager.GetDeviceFriendlyName(id)
 		if err != nil {
 			panic(err)
@@ -42,42 +43,74 @@ func TestAll(t *testing.T) {
 			panic(err)
 		}
 
-		fmt.Println(friendlyName)
-		fmt.Println(manufacturer)
-		fmt.Println(description)
+		fmt.Printf("[%d]\n", i)
+		fmt.Printf("\tdeviceName:   %s\n", friendlyName)
+		fmt.Printf("\tmanufacturer: %s\n", manufacturer)
+		fmt.Printf("\tdescription:  %s\n", description)
 
 		pPortableDevice, err := gowpd.CreatePortableDevice()
 		if err != nil {
 			panic(err)
 		}
 
+		// Establish a connection
 		err = pPortableDevice.Open(id, pClientInfo)
 		if err != nil {
 			panic(err)
 		}
 
-		//objectID := "F:\"
-		_, err = pPortableDevice.Content()
+		// objectId where the file will be transferred under.
+		objectID := "F:\\"
+
+		// path to selected file to transfer to device.
+		filePath := "E:\\RedLaboratory\\Media\\Picture\\result.png"
+
+		// open file as IStream.
+		pFileStream, err := gowpd.SHCreateStreamOnFile(filePath, 0)
 		if err != nil {
 			panic(err)
 		}
 
-		// select file to transfer to device.
-
-		// open file as IStream
-
 		// acquire properties needed to transfer file to device
+		pObjectProperties, err := gowpd.GetRequiredPropertiesForContentType(gowpd.WPD_CONTENT_TYPE_IMAGE, objectID, filePath, pFileStream)
+		if err != nil {
+			panic(err)
+		}
 
-		// transfer file to device
+		// get stream to device
+		content, err := pPortableDevice.Content()
+		if err != nil {
+			panic(err)
+		}
+		pTempStream, cbTransferSize, err := content.CreateObjectWithPropertiesAndData(pObjectProperties)
+		if err != nil {
+			panic(err)
+		}
 
-		//var pObjectProperties *gowpd.IPortableDeviceValues
-		//
-		//_, err = content.CreateObjectWithPropertiesAndData(pObjectProperties)
-		//if err != nil {
-		//	panic(err)
-		//}
+		// convert pTempStream to PortableDeviceDataStream to use more method e.g newly created object id.
+		_pFinalObjectDataStream, err := pTempStream.QueryInterface(gowpd.IID_IPortableDeviceDataStream)
+		if err != nil {
+			panic(err)
+		}
+		pFinalObjectDataStream := (*gowpd.IPortableDeviceDataStream)(_pFinalObjectDataStream)
 
+		// copy data from pFileStream to pFinalObjectDataStream
+		cbBytesWritten, err := gowpd.StreamCopy((*gowpd.IStream)(_pFinalObjectDataStream), pFileStream, cbTransferSize)
+		if err != nil {
+			panic(err)
+		}
+		// call commit method to notice device that transferring data is finished.
+		err = pFinalObjectDataStream.Commit(0)
+		if err != nil {
+			panic(err)
+		}
+
+		newlyCreatedObjectID, err := pFinalObjectDataStream.GetObjectID()
+		log.Printf("\"%s\" has been transfered to device successfuly: %d\n", newlyCreatedObjectID, cbBytesWritten)
+
+		// transferring is finished. release the deviceID.
 		gowpd.FreeDeviceID(id)
+		// release device interface too.
 		pPortableDevice.Release()
 	}
 

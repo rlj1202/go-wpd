@@ -137,6 +137,7 @@ extern "C" {
 
 	HRESULT enumPortableDeviceObjectIDs_Next(IEnumPortableDeviceObjectIDs *pEnumObjectIDs, ULONG cObjects, PWSTR *pObjIDs, DWORD *pcObjIDs, ULONG *pcPetched);
 
+	HRESULT stream_Commit(IStream *pStream, DWORD dataFlag);
 	HRESULT stream_Stat(IStream *pStream, STATSTG *pStatstg, DWORD statFlags);
 
 	HRESULT sequentialStream_Read(ISequentialStream *pSequentialStream, LPVOID pBuffer, ULONG cb, ULONG *pcbRead);

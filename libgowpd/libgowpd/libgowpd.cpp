@@ -240,6 +240,10 @@ HRESULT enumPortableDeviceObjectIDs_Next(IEnumPortableDeviceObjectIDs *pEnumObje
 	return hr;
 }
 
+HRESULT stream_Commit(IStream *pStream, DWORD dataFlag) {
+	return pStream->Commit(dataFlag);
+}
+
 HRESULT stream_Stat(IStream *pStream, STATSTG *pStatstg, DWORD statFlags) {
 	return pStream->Stat(pStatstg, statFlags);
 }
