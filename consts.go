@@ -1,5 +1,5 @@
 //
-// THIS IS AUTO GENERATED FILE
+// DO NOT EDIT! THIS IS AUTO-GENERATED FILE FROM gowpd.go USING gen/genconst.go
 //
 
 package gowpd
@@ -43,8 +43,18 @@ func (hr HRESULT) String() string {
 
 func (clsid CLSID) toCCLSID() *C.CLSID {
 	switch clsid {
+	case CLSID_PortableDevice:
+		return &C.CLSID_PortableDevice
+	case CLSID_PortableDeviceFTM:
+		return &C.CLSID_PortableDeviceFTM
 	case CLSID_PortableDeviceManager:
 		return &C.CLSID_PortableDeviceManager
+	case CLSID_PortableDeviceKeyCollection:
+		return &C.CLSID_PortableDeviceKeyCollection
+	case CLSID_PortableDeviceValues:
+		return &C.CLSID_PortableDeviceValues
+	case CLSID_PortableDevicePropVariantCollection:
+		return &C.CLSID_PortableDevicePropVariantCollection
 	default:
 		panic("unexpected")
 	}
@@ -173,6 +183,8 @@ func (propertyKey PropertyKey) toCPropertyKey() *C.PROPERTYKEY {
 		return &C.WPD_PROPERTY_ATTRIBUTE_REGULAR_EXPRESSION
 	case WPD_PROPERTY_ATTRIBUTE_MAX_SIZE:
 		return &C.WPD_PROPERTY_ATTRIBUTE_MAX_SIZE
+	case WPD_RESOURCE_DEFAULT:
+		return &C.WPD_RESOURCE_DEFAULT
 	default:
 		panic("unexpected")
 	}
@@ -180,10 +192,22 @@ func (propertyKey PropertyKey) toCPropertyKey() *C.PROPERTYKEY {
 
 func (iid IID) toCIID() *C.IID {
 	switch iid {
+	case IID_IPortableDevice:
+		return &C.IID_IPortableDevice
+	case IID_IPortableDeviceManager:
+		return &C.IID_IPortableDeviceManager
+	case IID_IPortableDeviceKeyCollection:
+		return &C.IID_IPortableDeviceKeyCollection
+	case IID_IPortableDeviceContent:
+		return &C.IID_IPortableDeviceContent
+	case IID_IPortableDeviceProperties:
+		return &C.IID_IPortableDeviceProperties
 	case IID_IPortableDeviceValues:
 		return &C.IID_IPortableDeviceValues
 	case IID_IPortableDeviceDataStream:
 		return &C.IID_IPortableDeviceDataStream
+	case IID_IPortableDevicePropVariantCollection:
+		return &C.IID_IPortableDevicePropVariantCollection
 	default:
 		panic("unexpected")
 	}

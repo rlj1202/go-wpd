@@ -1,61 +1,5 @@
 #include "stdafx.h"
 
-HRESULT createPortableDevice(IPortableDevice **pPortableDevice) {
-	if (pPortableDevice == NULL) {
-		return E_POINTER;
-	}
-
-	HRESULT hr = CoCreateInstance(CLSID_PortableDeviceFTM,// or just CLSID_PortableDevice. same functionality. FTM stands for Free Threaded Marshaler.
-		NULL,
-		CLSCTX_INPROC_SERVER,
-		IID_IPortableDevice,
-		(LPVOID*)pPortableDevice);
-
-	return hr;
-}
-
-HRESULT createPortableDeviceValues(IPortableDeviceValues **ppPortableDeviceValues) {
-	if (ppPortableDeviceValues == NULL) {
-		return E_POINTER;
-	}
-
-	HRESULT hr = CoCreateInstance(CLSID_PortableDeviceValues,
-		NULL,
-		CLSCTX_INPROC_SERVER,
-		IID_IPortableDeviceValues,
-		(LPVOID*) ppPortableDeviceValues);
-
-	return hr;
-}
-
-HRESULT createPortableDeviceManager(IPortableDeviceManager **ppPortableDeviceManager) {
-	if (ppPortableDeviceManager == NULL) {
-		return E_POINTER;
-	}
-
-	HRESULT hr = CoCreateInstance(CLSID_PortableDeviceManager,
-		NULL,
-		CLSCTX_INPROC_SERVER,
-		IID_IPortableDeviceManager,// The reason why I don't use macro IID_PPV_ARGS is when ppPortableDeviceManager comes from Golang, __uuidof() keyword don't work properly.
-		(LPVOID*)ppPortableDeviceManager);
-
-	return hr;
-}
-
-HRESULT createPortableDeviceKeyCollection(IPortableDeviceKeyCollection **ppPortableDeviceKeyCollection) {
-	if (ppPortableDeviceKeyCollection == NULL) {
-		return E_POINTER;
-	}
-
-	HRESULT hr = CoCreateInstance(CLSID_PortableDeviceKeyCollection,
-		NULL,
-		CLSCTX_INPROC_SERVER,
-		IID_IPortableDeviceKeyCollection,
-		(LPVOID*)ppPortableDeviceKeyCollection);
-
-	return hr;
-}
-
 HRESULT portableDevice_Advise(IPortableDevice *pPortableDevice, DWORD flags, IPortableDeviceEventCallback *pCallback, IPortableDeviceValues *pParameters, PWSTR *ppCookie) {
 	return pPortableDevice->Advise(flags, pCallback, pParameters, ppCookie);
 }
@@ -205,6 +149,14 @@ HRESULT portableDeviceContent_Properties(IPortableDeviceContent *pPortableDevice
 	return pPortableDeviceContent->Properties(ppPortableDeviceProperties);
 }
 
+HRESULT portableDeviceContent_Transfer(IPortableDeviceContent *pPortableDeviceContent, IPortableDeviceResources **ppPortableDeviceResources) {
+	return pPortableDeviceContent->Transfer(ppPortableDeviceResources);
+}
+
+HRESULT portableDeviceContent_Delete(IPortableDeviceContent *pPortableDeviceContent, DWORD options, IPortableDevicePropVariantCollection *pObjectIDs, IPortableDevicePropVariantCollection **ppResults) {
+	return pPortableDeviceContent->Delete(options, pObjectIDs, ppResults);
+}
+
 HRESULT portableDeviceKeyCollection_Add(IPortableDeviceKeyCollection *pPortableDeviceKeyCollection, const PROPERTYKEY *key) {
 	return pPortableDeviceKeyCollection->Add(*key);
 }
@@ -227,6 +179,23 @@ HRESULT portableDeviceDataStream_Commit(IPortableDeviceDataStream *pPortableDevi
 
 HRESULT portableDeviceDataStream_GetObjectID(IPortableDeviceDataStream *pPortableDeviceDataStream, PWSTR *pObjectID) {
 	return pPortableDeviceDataStream->GetObjectID(pObjectID);
+}
+
+HRESULT portableDevicePropVariantCollection_Add(IPortableDevicePropVariantCollection *pPortableDevicePropVariantCollection, const PROPVARIANT *pValue) {
+	return pPortableDevicePropVariantCollection->Add(pValue);
+}
+
+HRESULT portableDevicePropVariantCollection_GetAt(IPortableDevicePropVariantCollection *pPortableDevicePropVariantCollection, DWORD index, PROPVARIANT *value) {
+	return pPortableDevicePropVariantCollection->GetAt(index, value);
+}
+
+HRESULT portableDevicePropVariantCollection_GetCount(IPortableDevicePropVariantCollection *pPortableDevicePropVariantCollection, DWORD *pCounts) {
+	return pPortableDevicePropVariantCollection->GetCount(pCounts);
+}
+
+
+HRESULT portableDeviceResources_GetStream(IPortableDeviceResources *pPortableDeviceResources, PWSTR objectID, const PROPERTYKEY *key, DWORD mode, DWORD *optimalBufferSize, IStream **ppStream) {
+	return pPortableDeviceResources->GetStream(objectID, *key, mode, optimalBufferSize, ppStream);
 }
 
 HRESULT enumPortableDeviceObjectIDs_Next(IEnumPortableDeviceObjectIDs *pEnumObjectIDs, ULONG cObjects, PWSTR *pObjIDs, DWORD *pcObjIDs, ULONG *pcPetched) {
@@ -258,65 +227,4 @@ HRESULT sequentialStream_Write(ISequentialStream *pSequentialStream, LPVOID pBuf
 
 HRESULT unknown_QueryInterface(IUnknown *pUnknown, const IID *piid, LPVOID *ppvObject) {
 	return pUnknown->QueryInterface(*piid, ppvObject);
-}
-
-void test() {
-	const PROPERTYKEY & test = WPD_CLIENT_NAME;
-	
-	IPortableDeviceManager *pPortableDeviceManager;
-
-	HRESULT hr = CoCreateInstance(CLSID_PortableDeviceManager,
-		NULL,
-		CLSCTX_INPROC_SERVER,
-		IID_PPV_ARGS(&pPortableDeviceManager));
-	if (FAILED(hr))
-	{
-		printf("! Failed to CoCreateInstance CLSID_PortableDeviceManager, hr = 0x%lx\n", hr);
-	}
-
-	DWORD cPnPDeviceIDs;
-	if (SUCCEEDED(hr))
-	{
-		hr = pPortableDeviceManager->GetDevices(NULL, &cPnPDeviceIDs);
-		if (FAILED(hr))
-		{
-			printf("! Failed to get number of devices on the system, hr = 0x%lx\n", hr);
-		}
-	}
-
-	// Report the number of devices found.  NOTE: we will report 0, if an error
-	// occured.
-
-	printf("\n%d Windows Portable Device(s) found on the system\n\n", cPnPDeviceIDs);
-
-	PWSTR *pPnpDeviceIDs;
-	if (SUCCEEDED(hr) && (cPnPDeviceIDs > 0))
-	{
-		pPnpDeviceIDs = (PWSTR*)malloc(sizeof(PWSTR) * cPnPDeviceIDs);
-		//pPnpDeviceIDs = new (std::nothrow) PWSTR[cPnPDeviceIDs];
-		if (pPnpDeviceIDs != NULL)
-		{
-			DWORD dwIndex = 0;
-
-			hr = pPortableDeviceManager->GetDevices(pPnpDeviceIDs, &cPnPDeviceIDs);
-			if (SUCCEEDED(hr))
-			{
-				// For each device found, display the devices friendly name,
-				// manufacturer, and description strings.
-				for (dwIndex = 0; dwIndex < cPnPDeviceIDs; dwIndex++)
-				{
-					printf("[%d] ", dwIndex);
-					//DisplayFriendlyName(pPortableDeviceManager, pPnpDeviceIDs[dwIndex]);
-					//printf("    ");
-					//DisplayManufacturer(pPortableDeviceManager, pPnpDeviceIDs[dwIndex]);
-					//printf("    ");
-					//DisplayDescription(pPortableDeviceManager, pPnpDeviceIDs[dwIndex]);
-				}
-			}
-			else
-			{
-				printf("! Failed to get the device list from the system, hr = 0x%lx\n", hr);
-			}
-		}
-	}
 }

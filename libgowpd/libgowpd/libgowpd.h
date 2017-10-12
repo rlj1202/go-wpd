@@ -2,16 +2,30 @@
 
 #include <Windows.h>
 
+#ifndef _LIBGOWPD
+#define _LIBGOWPD
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-	typedef WCHAR *PnPDeviceID;
 	
-	extern const CLSID CLSID_PortableDeviceManager;
+	typedef WCHAR *PnPDeviceID;
 
+	extern const CLSID CLSID_PortableDevice;
+	extern const CLSID CLSID_PortableDeviceFTM;
+	extern const CLSID CLSID_PortableDeviceManager;
+	extern const CLSID CLSID_PortableDeviceKeyCollection;
+	extern const CLSID CLSID_PortableDeviceValues;
+	extern const CLSID CLSID_PortableDevicePropVariantCollection;
+
+	extern const IID IID_IPortableDevice;
+	extern const IID IID_IPortableDeviceManager;
+	extern const IID IID_IPortableDeviceKeyCollection;
+	extern const IID IID_IPortableDeviceContent;
+	extern const IID IID_IPortableDeviceProperties;
 	extern const IID IID_IPortableDeviceValues;
 	extern const IID IID_IPortableDeviceDataStream;
+	extern const IID IID_IPortableDevicePropVariantCollection;
 
 	extern const PROPERTYKEY WPD_CLIENT_NAME;
 	extern const PROPERTYKEY WPD_CLIENT_MAJOR_VERSION;
@@ -40,7 +54,9 @@ extern "C" {
 	extern const PROPERTYKEY WPD_PROPERTY_ATTRIBUTE_ENUMERATION_ELEMENTS;
 	extern const PROPERTYKEY WPD_PROPERTY_ATTRIBUTE_REGULAR_EXPRESSION;
 	extern const PROPERTYKEY WPD_PROPERTY_ATTRIBUTE_MAX_SIZE;
-
+	
+	extern const PROPERTYKEY WPD_RESOURCE_DEFAULT;
+	
 	extern const GUID WPD_CONTENT_TYPE_FUNCTIONAL_OBJECT;
 	extern const GUID WPD_CONTENT_TYPE_FOLDER;
 	extern const GUID WPD_CONTENT_TYPE_IMAGE;
@@ -85,17 +101,13 @@ extern "C" {
 	typedef struct IPortableDeviceCapabilities IPortableDeviceCapabilities;
 	typedef struct IPortableDevicePropVariantCollection IPortableDevicePropVariantCollection;
 	typedef struct IPortableDeviceEventCallback IPortableDeviceEventCallback;
+	typedef struct IPortableDeviceResources IPortableDeviceResources;
 	typedef struct IStream IStream;
 	typedef struct ISequentialStream ISequentialStream;
 	typedef struct IPropertyStore IPropertyStore;
 	typedef struct IUnknown IUnknown;
 	
 	typedef struct IEnumPortableDeviceObjectIDs IEnumPortableDeviceObjectIDs;
-	
-	HRESULT createPortableDevice(IPortableDevice **ppPortableDevice);
-	HRESULT createPortableDeviceValues(IPortableDeviceValues **ppPortableDeviceValues);
-	HRESULT createPortableDeviceManager(IPortableDeviceManager **ppPortableDeviceManager);
-	HRESULT createPortableDeviceKeyCollection(IPortableDeviceKeyCollection **ppPortableDeviceKeyCollection);
 
 	HRESULT portableDevice_Advise(IPortableDevice *pPortableDevice, DWORD flags, IPortableDeviceEventCallback *pCallback, IPortableDeviceValues *pParameters, PWSTR *ppCookie);
 	HRESULT portableDevice_Cancel(IPortableDevice *pPortableDevice);
@@ -125,6 +137,8 @@ extern "C" {
 	HRESULT portableDeviceContent_CreateObjectWithPropertiesAndData(IPortableDeviceContent *pPortableDeviceContent, IPortableDeviceValues *pValues, IStream **ppData, DWORD *pOptimalWriteBufferSize, PWSTR *ppCookie);
 	HRESULT portableDeviceContent_EnumObjects(IPortableDeviceContent *pPortableDeviceContent, DWORD flags, PWSTR parentObjectID, IPortableDeviceValues *pFilter, IEnumPortableDeviceObjectIDs **ppEnum);
 	HRESULT portableDeviceContent_Properties(IPortableDeviceContent *pPortableDeviceContent, IPortableDeviceProperties **ppPortableDeviceProperties);
+	HRESULT portableDeviceContent_Transfer(IPortableDeviceContent *pPortableDeviceContent, IPortableDeviceResources **ppPortableDeviceResources);
+	HRESULT portableDeviceContent_Delete(IPortableDeviceContent *pPortableDeviceContent, DWORD option, IPortableDevicePropVariantCollection *pObjectIDs, IPortableDevicePropVariantCollection **ppResults);
 
 	HRESULT portableDeviceKeyCollection_Add(IPortableDeviceKeyCollection *pPortableDeviceKeyCollection, const PROPERTYKEY *key);
 	
@@ -134,6 +148,12 @@ extern "C" {
 
 	HRESULT portableDeviceDataStream_Commit(IPortableDeviceDataStream *pPortableDeviceDataStream, DWORD dataFlags);
 	HRESULT portableDeviceDataStream_GetObjectID(IPortableDeviceDataStream *pPortableDeviceDataStream, PWSTR *pObjectID);
+
+	HRESULT portableDevicePropVariantCollection_Add(IPortableDevicePropVariantCollection *pPortableDevicePropVariantCollection, const PROPVARIANT *pValue);
+	HRESULT portableDevicePropVariantCollection_GetAt(IPortableDevicePropVariantCollection *pPortableDevicePropVariantCollection, DWORD index, PROPVARIANT *value);
+	HRESULT portableDevicePropVariantCollection_GetCount(IPortableDevicePropVariantCollection *pPortableDevicePropVariantCollection, DWORD *pCounts);
+
+	HRESULT portableDeviceResources_GetStream(IPortableDeviceResources *pPortableDeviceResources, PWSTR objectID, const PROPERTYKEY *key, DWORD mode, DWORD *optimalBufferSize, IStream **ppStream);
 
 	HRESULT enumPortableDeviceObjectIDs_Next(IEnumPortableDeviceObjectIDs *pEnumObjectIDs, ULONG cObjects, PWSTR *pObjIDs, DWORD *pcObjIDs, ULONG *pcPetched);
 
@@ -145,8 +165,8 @@ extern "C" {
 	
 	HRESULT unknown_QueryInterface(IUnknown *pUnknown, const IID *piid, LPVOID *ppvObject);
 
-	void test();
-
 #ifdef __cplusplus
 }
+#endif
+
 #endif

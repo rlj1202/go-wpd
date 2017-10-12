@@ -49,6 +49,33 @@ import (
 )
 
 const (
+	CLSCTX_INPROC_SERVER CLSCTX = 1 << iota
+	CLSCTX_INPROC_HANDLER
+	CLSCTX_LOCAL_SERVER
+	CLSCTX_INPROC_SERVER16
+	CLSCTX_REMOTE_SERVER
+	CLSCTX_INPROC_HANDLER16
+	CLSCTX_RESERVED1
+	CLSCTX_RESERVED2
+	CLSCTX_RESERVED3
+	CLSCTX_RESERVED4
+	CLSCTX_NO_CODE_DOWNLOAD
+	CLSCTX_RESERVED5
+	CLSCTX_NO_CUSTOM_MARSHAL
+	CLSCTX_ENABLE_CODE_DOWNLOAD
+	CLSCTX_NO_FAILURE_LOG
+	CLSCTX_DISABLE_AAA
+	CLSCTX_ENABLE_AAA
+	CLSCTX_FROM_DEFAULT_CONTEXT
+	CLSCTX_ACTIVATE_32_BIT_SERVER
+	CLSCTX_ACTIVATE_64_BIT_SERVER
+	CLSCTX_ENABLE_CLOAKING
+	CLSCTX_APPCONTAINER
+	CLSCTX_ACTIVATE_AAA_AS_IU
+	CLSCTX_PS_DLL
+)
+
+const (
 	S_OK HRESULT = C.S_OK & 0xffffffff// 0x00000000
 	S_FALSE HRESULT = C.S_FALSE & 0xffffffff// 0x00000001
 
@@ -64,15 +91,29 @@ const (
 	E_UNEXPECTED HRESULT = C.E_UNEXPECTED & 0xffffffff// 0x8000FFFF
 
 	CO_E_NOTINITIALIZED HRESULT = C.CO_E_NOTINITIALIZED & 0xffffffff// 0x800401f0
+
+	//E_FILE_ALREADY_EXISTS HRESULT = 0x80070050
+	//E_FILE_IS_BEING_USED_BY_ANOTHER_PROCESS HRESULT = 0x80070020
 )
 
 const (
-	CLSID_PortableDeviceManager CLSID = iota
+	CLSID_PortableDevice CLSID = iota
+	CLSID_PortableDeviceFTM
+	CLSID_PortableDeviceManager
+	CLSID_PortableDeviceKeyCollection
+	CLSID_PortableDeviceValues
+	CLSID_PortableDevicePropVariantCollection
 )
 
 const (
-	IID_IPortableDeviceValues IID = iota
+	IID_IPortableDevice IID = iota
+	IID_IPortableDeviceManager
+	IID_IPortableDeviceKeyCollection
+	IID_IPortableDeviceContent
+	IID_IPortableDeviceProperties
+	IID_IPortableDeviceValues
 	IID_IPortableDeviceDataStream
+	IID_IPortableDevicePropVariantCollection
 )
 
 const (
@@ -103,6 +144,8 @@ const (
 	WPD_PROPERTY_ATTRIBUTE_ENUMERATION_ELEMENTS
 	WPD_PROPERTY_ATTRIBUTE_REGULAR_EXPRESSION
 	WPD_PROPERTY_ATTRIBUTE_MAX_SIZE
+
+	WPD_RESOURCE_DEFAULT
 )
 
 const (
@@ -160,6 +203,68 @@ const (
 
 const (
 	STGM_READ = C.STGM_READ
+	STGM_CREATE = C.STGM_CREATE
+	STGM_WRITE = C.STGM_WRITE
+)
+
+const (
+	VT_EMPTY VARTYPE = 0
+	VT_NULL VARTYPE = 1
+	VT_I2 VARTYPE = 2
+	VT_I4 VARTYPE = 3
+	VT_R4 VARTYPE = 4
+	VT_R8 VARTYPE = 5
+	VT_CY VARTYPE = 6
+	VT_DATE VARTYPE = 7
+	VT_BSTR VARTYPE = 8
+	VT_DISPATCH VARTYPE = 9
+	VT_ERROR VARTYPE = 10
+	VT_BOOL VARTYPE = 11
+	VT_VARIANT VARTYPE = 12
+	VT_UNKNOWN VARTYPE = 13
+	VT_DECIMAL VARTYPE = 14
+	VT_I1 VARTYPE = 16
+	VT_UI1 VARTYPE = 17
+	VT_UI2 VARTYPE = 18
+	VT_UI4 VARTYPE = 19
+	VT_I8 VARTYPE = 20
+	VT_UI8 VARTYPE = 21
+	VT_INT VARTYPE = 22
+	VT_UINT VARTYPE = 23
+	VT_VOID VARTYPE = 24
+	VT_HRESULT VARTYPE = 25
+	VT_PTR VARTYPE = 26
+	VT_SAFEARRAY VARTYPE = 27
+	VT_CARRAY VARTYPE = 28
+	VT_USERDEFINED VARTYPE = 29
+	VT_LPSTR VARTYPE = 30
+	VT_LPWSTR VARTYPE = 31
+	VT_RECORD VARTYPE = 36
+	VT_INT_PTR VARTYPE = 37
+	VT_UINT_PTR VARTYPE = 38
+	VT_FILETIME VARTYPE = 64
+	VT_BLOB VARTYPE = 65
+	VT_STREAM VARTYPE = 66
+	VT_STORAGE VARTYPE = 67
+	VT_STREAMED_OBJECT VARTYPE = 68
+	VT_STORED_OBJECT VARTYPE = 69
+	VT_BLOB_OBJECT VARTYPE = 70
+	VT_CF VARTYPE = 71
+	VT_CLSID VARTYPE = 72
+	VT_VERSIONED_STREAM VARTYPE = 73
+	VT_BSTR_BLOB VARTYPE = 0xfff
+	VT_VECTOR VARTYPE = 0x1000
+	VT_ARRAY VARTYPE = 0x2000
+	VT_BYREF VARTYPE = 0x4000
+	VT_RESERVED VARTYPE = 0x8000
+	VT_ILLEGAL VARTYPE = 0xffff
+	VT_ILLEGALMASKED VARTYPE = 0xfff
+	VT_TYPEMASK VARTYPE = 0xfff
+)
+
+const (
+	PORTABLE_DEVICE_DELETE_NO_RECURSION uint32 = iota
+	PORTABLE_DEVICE_DELETE_WITH_RECURSION
 )
 
 // C.WCHAR
@@ -173,6 +278,8 @@ type DWORD uint32
 type ULONG uint32
 // *WCHAR
 type PnPDeviceID C.PnPDeviceID
+// C.CLSCTX
+type CLSCTX int
 // C.CLSID
 type CLSID int
 // C.IID
@@ -181,6 +288,8 @@ type IID int
 type PropertyKey int
 // C.GUID
 type GUID int
+// C.VARENUM
+type VARTYPE uint16
 
 type IPortableDevice C.IPortableDevice
 type IPortableDeviceValues C.IPortableDeviceValues
@@ -192,6 +301,7 @@ type IPortableDeviceDataStream C.IPortableDeviceDataStream
 type IPortableDeviceCapabilities C.IPortableDeviceCapabilities
 type IPortableDevicePropVariantCollection C.IPortableDevicePropVariantCollection
 type IPortableDeviceEventCallback C.IPortableDeviceEventCallback
+type IPortableDeviceResources C.IPortableDeviceResources
 type IStream C.IStream
 type ISequentialStream C.ISequentialStream
 type IPropertyStore C.IPropertyStore
@@ -238,69 +348,58 @@ func FreeDeviceID(pnpDeviceID PnPDeviceID) {
 	C.CoTaskMemFree(C.LPVOID(pnpDeviceID))
 }
 
-func CreatePortableDevice() (*IPortableDevice, error) {
+func CoCreateInstance(clsid CLSID, iid IID) (unsafe.Pointer, error) {
 	var (
-		pPortableDevice *C.IPortableDevice
+		pInstance C.LPVOID
 	)
 
-	log.Println("CreatePortableDevice(): Ready")
-	hr := C.createPortableDevice(&pPortableDevice)
+	hr := C.CoCreateInstance(clsid.toCCLSID(), nil, C.DWORD(CLSCTX_INPROC_SERVER), iid.toCIID(), &pInstance)
 
 	if hr < 0 {
 		return nil, HRESULT(hr)
 	}
 
-	log.Println("CreatePortableDevice(): Create portable device instance.")
+	return unsafe.Pointer(pInstance), nil
+}
 
-	return (*IPortableDevice)(pPortableDevice), nil
+func CreatePortableDevice() (*IPortableDevice, error) {
+	log.Println("CreatePortableDevice(): Ready")
+
+	ptr, err := CoCreateInstance(CLSID_PortableDeviceFTM, IID_IPortableDevice)
+
+	return (*IPortableDevice)(ptr), err
 }
 
 func CreatePortableDeviceValues() (*IPortableDeviceValues, error) {
-	var (
-		pPortableDeviceValues *C.IPortableDeviceValues
-	)
-
 	log.Println("CreatePortableDeviceValues(): Ready")
-	hr := C.createPortableDeviceValues(&pPortableDeviceValues)
 
-	if hr < 0 {
-		return nil, HRESULT(hr)
-	}
+	ptr, err := CoCreateInstance(CLSID_PortableDeviceValues, IID_IPortableDeviceValues)
 
-	return (*IPortableDeviceValues)(pPortableDeviceValues), nil
+	return (*IPortableDeviceValues)(ptr), err
 }
 
 func CreatePortableDeviceManager() (*IPortableDeviceManager, error) {
-	var (
-		pPortableDeviceManager *C.IPortableDeviceManager
-	)
-
-	log.Println("CreatePortableDeviceManager(): Ready")
-	hr := C.createPortableDeviceManager(&pPortableDeviceManager)
-
-	if hr < 0 {
-		return nil, HRESULT(hr)
-	}
-
 	log.Println("CreatePortableDeviceManager(): Create portable device manager instance.")
 
-	return (*IPortableDeviceManager)(pPortableDeviceManager), nil
+	ptr, err := CoCreateInstance(CLSID_PortableDeviceManager, IID_IPortableDeviceManager)
+
+	return (*IPortableDeviceManager)(ptr), err
 }
 
 func CreatePortableDeviceKeyCollection() (*IPortableDeviceKeyCollection, error) {
-	var (
-		pPortableDeviceKeyCollection *C.IPortableDeviceKeyCollection
-	)
-
 	log.Println("CreatePortableDeviceKeyCollection(): Ready")
 
-	hr := C.createPortableDeviceKeyCollection(&pPortableDeviceKeyCollection)
+	ptr, err := CoCreateInstance(CLSID_PortableDeviceKeyCollection, IID_IPortableDeviceKeyCollection)
 
-	if hr < 0 {
-		return nil, HRESULT(hr)
-	}
+	return (*IPortableDeviceKeyCollection)(ptr), err
+}
 
-	return (*IPortableDeviceKeyCollection)(pPortableDeviceKeyCollection), nil
+func CreatePortableDevicePropVariantCollection() (*IPortableDevicePropVariantCollection, error) {
+	log.Println("CreatePortableDevicePropVariantCollection(): Ready")
+
+	ptr, err := CoCreateInstance(CLSID_PortableDevicePropVariantCollection, IID_IPortableDevicePropVariantCollection)
+
+	return (*IPortableDevicePropVariantCollection)(ptr), err
 }
 
 func (pPortableDevice *IPortableDevice) Content() (*IPortableDeviceContent, error) {
@@ -630,6 +729,39 @@ func (pPortableDeviceContent *IPortableDeviceContent) Properties() (*IPortableDe
 	return (*IPortableDeviceProperties)(pPortableDeviceProperties), nil
 }
 
+func (pPortableDeviceContent *IPortableDeviceContent) Transfer() (*IPortableDeviceResources, error) {
+	var (
+		pPortableDeviceResources *C.IPortableDeviceResources
+	)
+
+	hr := C.portableDeviceContent_Transfer((*C.IPortableDeviceContent)(pPortableDeviceContent), &pPortableDeviceResources)
+
+	if hr < 0 {
+		return nil, HRESULT(hr)
+	}
+
+	return (*IPortableDeviceResources)(pPortableDeviceResources), nil
+}
+
+func (pPortableDeviceContent *IPortableDeviceContent) Delete(options uint32, objectIDs *IPortableDevicePropVariantCollection) (*IPortableDevicePropVariantCollection, error) {
+	var (
+		results *C.IPortableDevicePropVariantCollection
+	)
+
+	hr := C.portableDeviceContent_Delete((*C.IPortableDeviceContent)(pPortableDeviceContent), C.DWORD(options), (*C.IPortableDevicePropVariantCollection)(objectIDs), &results)
+
+	if hr < 0 {
+		return nil, HRESULT(hr)
+	}
+	if HRESULT(hr) == S_FALSE {
+		return (*IPortableDevicePropVariantCollection)(results), HRESULT(hr)
+	}
+
+	log.Printf("Delete(): Result %#x\n", uint32(hr))
+
+	return (*IPortableDevicePropVariantCollection)(results), nil
+}
+
 func (pPortableDeviceKeyCollection *IPortableDeviceKeyCollection) Add(key PropertyKey) error {
 	log.Println("Add(): Ready")
 
@@ -781,6 +913,73 @@ func (pEnumObjectIDs *IEnumPortableDeviceObjectIDs) Next(cObjects uint32) ([]str
 	return objects, nil
 }
 
+func (pPortableDevicePropVariantCollection *IPortableDevicePropVariantCollection) Add(value *PropVariant) error {
+	hr := C.portableDevicePropVariantCollection_Add((*C.IPortableDevicePropVariantCollection)(pPortableDevicePropVariantCollection), (*C.PROPVARIANT)(value))
+
+	if hr < 0 {
+		return HRESULT(hr)
+	}
+
+	return nil
+}
+
+func (pPortableDevicePropVariantCollection *IPortableDevicePropVariantCollection) GetAt(index uint32) (*PropVariant, error) {
+	var (
+		value *C.PROPVARIANT = new(C.PROPVARIANT)
+	)
+
+	if pPortableDevicePropVariantCollection == nil {
+		return nil, E_POINTER
+	}
+
+	hr := C.portableDevicePropVariantCollection_GetAt((*C.IPortableDevicePropVariantCollection)(pPortableDevicePropVariantCollection), C.DWORD(index), value)
+
+	if hr < 0 {
+		return nil, HRESULT(hr)
+	}
+
+	return (*PropVariant)(value), nil
+}
+
+func (pPortableDevicePropVariantCollection *IPortableDevicePropVariantCollection) GetCount() (uint32, error) {
+	var (
+		count C.DWORD = 0
+	)
+
+	if pPortableDevicePropVariantCollection == nil {
+		return 0, E_POINTER
+	}
+
+	hr := C.portableDevicePropVariantCollection_GetCount((*C.IPortableDevicePropVariantCollection)(pPortableDevicePropVariantCollection), &count)
+
+	if hr < 0 {
+		return 0, HRESULT(hr)
+	}
+
+	return uint32(count), nil
+}
+
+func (pPortableDeviceResources *IPortableDeviceResources) GetStream(objectID string, key PropertyKey, mode uint32) (*IStream, uint32, error) {
+	var (
+		pStream *C.IStream
+		optimalBufferSize C.DWORD
+	)
+
+	pObjectID, err := allocatePWSTR(objectID)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer C.free(unsafe.Pointer(pObjectID))
+
+	hr := C.portableDeviceResources_GetStream((*C.IPortableDeviceResources)(pPortableDeviceResources), pObjectID, key.toCPropertyKey(), C.DWORD(mode), &optimalBufferSize, &pStream)
+
+	if hr < 0 {
+		return nil, 0, HRESULT(hr)
+	}
+
+	return (*IStream)(pStream), uint32(optimalBufferSize), nil
+}
+
 func (pStream *IStream) Commit(dataFlag uint32) error {
 	hr := C.stream_Commit((*C.IStream)(pStream), C.DWORD(dataFlag))
 
@@ -923,6 +1122,30 @@ func toGoString(str C.PWSTR, cStr uint32) string {
 	}
 
 	return string(goString)
+}
+
+func allocatePWSTRCoTask(value string) (C.PWSTR, error) {
+	decodedStr := make([]rune, 0, len(value))
+	utf8Str := []byte(value)
+	for len(utf8Str) > 0 {
+		r, s := utf8.DecodeRune(utf8Str)
+		decodedStr = append(decodedStr, r)
+		utf8Str = utf8Str[s:]
+	}
+	utf16Str := utf16.Encode(decodedStr)
+
+	pwstr := C.CoTaskMemAlloc(C.SIZE_T(C.sizeof_WCHAR * (len(value) + 1)))
+	if pwstr == nil {
+		return nil, E_POINTER
+	}
+	raw := (*[1 << 30]C.WCHAR)(pwstr)[:len(value) + 1:len(value) + 1]
+
+	for i, r := range utf16Str {
+		raw[i] = C.WCHAR(r)
+	}
+	raw[len(value)] = 0
+
+	return C.PWSTR(pwstr), nil
 }
 
 // Allocate memory.

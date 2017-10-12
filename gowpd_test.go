@@ -48,6 +48,11 @@ func TestAll(t *testing.T) {
 		fmt.Printf("\tmanufacturer: %s\n", manufacturer)
 		fmt.Printf("\tdescription:  %s\n", description)
 
+		if friendlyName != "SANDISK" {
+			gowpd.FreeDeviceID(id)
+			continue
+		}
+
 		pPortableDevice, err := gowpd.CreatePortableDevice()
 		if err != nil {
 			panic(err)
@@ -64,6 +69,7 @@ func TestAll(t *testing.T) {
 
 		// path to selected file to transfer to device.
 		filePath := "E:\\RedLaboratory\\Media\\Picture\\result.png"
+		filePath = "E:\\test.md"
 
 		// open file as IStream.
 		pFileStream, err := gowpd.SHCreateStreamOnFile(filePath, 0)
@@ -106,7 +112,7 @@ func TestAll(t *testing.T) {
 		}
 
 		newlyCreatedObjectID, err := pFinalObjectDataStream.GetObjectID()
-		log.Printf("\"%s\" has been transfered to device successfuly: %d\n", newlyCreatedObjectID, cbBytesWritten)
+		log.Printf("\"%s\" has been transferred to device successfully: %d\n", newlyCreatedObjectID, cbBytesWritten)
 
 		// transferring is finished. release the deviceID.
 		gowpd.FreeDeviceID(id)

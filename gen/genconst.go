@@ -8,6 +8,7 @@ import (
 	"go/ast"
 	"text/template"
 	"os"
+	"path/filepath"
 )
 
 /*
@@ -82,10 +83,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	f, err := os.Create("../consts.go")
+	f, err := os.Create("consts.go")
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println(filepath.Abs(f.Name()))
 
 	constsTemplate := template.Must(template.New("consts").Parse(string(templateBytes)))
 	err = constsTemplate.Execute(f, consts)
