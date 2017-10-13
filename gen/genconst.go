@@ -1,25 +1,25 @@
 package main
 
 import (
+	"go/ast"
 	"go/parser"
 	"go/token"
 	"io/ioutil"
 	"log"
-	"go/ast"
-	"text/template"
 	"os"
 	"path/filepath"
+	"text/template"
 )
 
 /*
 Contains names of consts in gowpd.go
- */
+*/
 type Consts struct {
-	HRESULTS []string
-	CLSIDS []string
-	IIDS []string
+	HRESULTS     []string
+	CLSIDS       []string
+	IIDS         []string
 	PROPERTYKEYS []string
-	GUIDS []string
+	GUIDS        []string
 }
 
 func main() {
