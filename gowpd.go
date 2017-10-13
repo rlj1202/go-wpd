@@ -37,15 +37,15 @@ package gowpd
 //-lPortableDeviceGuids -luuid
 
 #include "libgowpd.h"
- */
+*/
 import "C"
 import (
-	"unsafe"
-	"log"
+	"encoding/binary"
 	"fmt"
+	"log"
 	"unicode/utf16"
 	"unicode/utf8"
-	"encoding/binary"
+	"unsafe"
 )
 
 const (
@@ -76,21 +76,21 @@ const (
 )
 
 const (
-	S_OK HRESULT = C.S_OK & 0xffffffff// 0x00000000
-	S_FALSE HRESULT = C.S_FALSE & 0xffffffff// 0x00000001
+	S_OK    HRESULT = C.S_OK & 0xffffffff    // 0x00000000
+	S_FALSE HRESULT = C.S_FALSE & 0xffffffff // 0x00000001
 
-	E_ABORT HRESULT = C.E_ABORT & 0xffffffff// 0x80004004
-	E_ACCESSDENIED HRESULT = C.E_ACCESSDENIED & 0xffffffff// 0x80070005
-	E_FAIL HRESULT = C.E_FAIL & 0xffffffff// 0x80004005
-	E_HANDLE HRESULT = C.E_HANDLE & 0xffffffff// 0x80070006
-	E_INVALIDARG HRESULT = C.E_INVALIDARG & 0xffffffff// 0x80070057
-	E_NOINTERFACE HRESULT = C.E_NOINTERFACE & 0xffffffff// 0x80004002
-	E_NOTIMPL HRESULT = C.E_NOTIMPL & 0xffffffff// 0x80004001
-	E_OUTOFMEMORY HRESULT = C.E_OUTOFMEMORY & 0xffffffff// 0x8007000E
-	E_POINTER HRESULT = C.E_POINTER & 0xffffffff// 0x80004003
-	E_UNEXPECTED HRESULT = C.E_UNEXPECTED & 0xffffffff// 0x8000FFFF
+	E_ABORT        HRESULT = C.E_ABORT & 0xffffffff        // 0x80004004
+	E_ACCESSDENIED HRESULT = C.E_ACCESSDENIED & 0xffffffff // 0x80070005
+	E_FAIL         HRESULT = C.E_FAIL & 0xffffffff         // 0x80004005
+	E_HANDLE       HRESULT = C.E_HANDLE & 0xffffffff       // 0x80070006
+	E_INVALIDARG   HRESULT = C.E_INVALIDARG & 0xffffffff   // 0x80070057
+	E_NOINTERFACE  HRESULT = C.E_NOINTERFACE & 0xffffffff  // 0x80004002
+	E_NOTIMPL      HRESULT = C.E_NOTIMPL & 0xffffffff      // 0x80004001
+	E_OUTOFMEMORY  HRESULT = C.E_OUTOFMEMORY & 0xffffffff  // 0x8007000E
+	E_POINTER      HRESULT = C.E_POINTER & 0xffffffff      // 0x80004003
+	E_UNEXPECTED   HRESULT = C.E_UNEXPECTED & 0xffffffff   // 0x8000FFFF
 
-	CO_E_NOTINITIALIZED HRESULT = C.CO_E_NOTINITIALIZED & 0xffffffff// 0x800401f0
+	CO_E_NOTINITIALIZED HRESULT = C.CO_E_NOTINITIALIZED & 0xffffffff // 0x800401f0
 
 	//E_FILE_ALREADY_EXISTS HRESULT = 0x80070050
 	//E_FILE_IS_BEING_USED_BY_ANOTHER_PROCESS HRESULT = 0x80070020
@@ -189,77 +189,77 @@ const (
 )
 
 const (
-	GENERIC_READ = C.GENERIC_READ & 0xffffffff// 0x80000000
-	GENERIC_WRITE = C.GENERIC_WRITE & 0xffffffff// 0x40000000
-	GENERIC_EXECUTE = C.GENERIC_EXECUTE & 0xffffffff// 0x20000000
-	GENERIC_ALL = C.GENERIC_ALL & 0xffffffff// 0x10000000
+	GENERIC_READ    = C.GENERIC_READ & 0xffffffff    // 0x80000000
+	GENERIC_WRITE   = C.GENERIC_WRITE & 0xffffffff   // 0x40000000
+	GENERIC_EXECUTE = C.GENERIC_EXECUTE & 0xffffffff // 0x20000000
+	GENERIC_ALL     = C.GENERIC_ALL & 0xffffffff     // 0x10000000
 )
 
 const (
 	STATFLAG_DEFAULT = C.STATFLAG_DEFAULT
-	STATFLAG_NONAME = C.STATFLAG_NONAME
-	STATFLAG_NOOPEN = C.STATFLAG_NOOPEN
+	STATFLAG_NONAME  = C.STATFLAG_NONAME
+	STATFLAG_NOOPEN  = C.STATFLAG_NOOPEN
 )
 
 const (
-	STGM_READ = C.STGM_READ
+	STGM_READ   = C.STGM_READ
 	STGM_CREATE = C.STGM_CREATE
-	STGM_WRITE = C.STGM_WRITE
+	STGM_WRITE  = C.STGM_WRITE
 )
 
 const (
-	VT_EMPTY VARTYPE = 0
-	VT_NULL VARTYPE = 1
-	VT_I2 VARTYPE = 2
-	VT_I4 VARTYPE = 3
-	VT_R4 VARTYPE = 4
-	VT_R8 VARTYPE = 5
-	VT_CY VARTYPE = 6
-	VT_DATE VARTYPE = 7
-	VT_BSTR VARTYPE = 8
-	VT_DISPATCH VARTYPE = 9
-	VT_ERROR VARTYPE = 10
-	VT_BOOL VARTYPE = 11
-	VT_VARIANT VARTYPE = 12
-	VT_UNKNOWN VARTYPE = 13
-	VT_DECIMAL VARTYPE = 14
-	VT_I1 VARTYPE = 16
-	VT_UI1 VARTYPE = 17
-	VT_UI2 VARTYPE = 18
-	VT_UI4 VARTYPE = 19
-	VT_I8 VARTYPE = 20
-	VT_UI8 VARTYPE = 21
-	VT_INT VARTYPE = 22
-	VT_UINT VARTYPE = 23
-	VT_VOID VARTYPE = 24
-	VT_HRESULT VARTYPE = 25
-	VT_PTR VARTYPE = 26
-	VT_SAFEARRAY VARTYPE = 27
-	VT_CARRAY VARTYPE = 28
-	VT_USERDEFINED VARTYPE = 29
-	VT_LPSTR VARTYPE = 30
-	VT_LPWSTR VARTYPE = 31
-	VT_RECORD VARTYPE = 36
-	VT_INT_PTR VARTYPE = 37
-	VT_UINT_PTR VARTYPE = 38
-	VT_FILETIME VARTYPE = 64
-	VT_BLOB VARTYPE = 65
-	VT_STREAM VARTYPE = 66
-	VT_STORAGE VARTYPE = 67
-	VT_STREAMED_OBJECT VARTYPE = 68
-	VT_STORED_OBJECT VARTYPE = 69
-	VT_BLOB_OBJECT VARTYPE = 70
-	VT_CF VARTYPE = 71
-	VT_CLSID VARTYPE = 72
+	VT_EMPTY            VARTYPE = 0
+	VT_NULL             VARTYPE = 1
+	VT_I2               VARTYPE = 2
+	VT_I4               VARTYPE = 3
+	VT_R4               VARTYPE = 4
+	VT_R8               VARTYPE = 5
+	VT_CY               VARTYPE = 6
+	VT_DATE             VARTYPE = 7
+	VT_BSTR             VARTYPE = 8
+	VT_DISPATCH         VARTYPE = 9
+	VT_ERROR            VARTYPE = 10
+	VT_BOOL             VARTYPE = 11
+	VT_VARIANT          VARTYPE = 12
+	VT_UNKNOWN          VARTYPE = 13
+	VT_DECIMAL          VARTYPE = 14
+	VT_I1               VARTYPE = 16
+	VT_UI1              VARTYPE = 17
+	VT_UI2              VARTYPE = 18
+	VT_UI4              VARTYPE = 19
+	VT_I8               VARTYPE = 20
+	VT_UI8              VARTYPE = 21
+	VT_INT              VARTYPE = 22
+	VT_UINT             VARTYPE = 23
+	VT_VOID             VARTYPE = 24
+	VT_HRESULT          VARTYPE = 25
+	VT_PTR              VARTYPE = 26
+	VT_SAFEARRAY        VARTYPE = 27
+	VT_CARRAY           VARTYPE = 28
+	VT_USERDEFINED      VARTYPE = 29
+	VT_LPSTR            VARTYPE = 30
+	VT_LPWSTR           VARTYPE = 31
+	VT_RECORD           VARTYPE = 36
+	VT_INT_PTR          VARTYPE = 37
+	VT_UINT_PTR         VARTYPE = 38
+	VT_FILETIME         VARTYPE = 64
+	VT_BLOB             VARTYPE = 65
+	VT_STREAM           VARTYPE = 66
+	VT_STORAGE          VARTYPE = 67
+	VT_STREAMED_OBJECT  VARTYPE = 68
+	VT_STORED_OBJECT    VARTYPE = 69
+	VT_BLOB_OBJECT      VARTYPE = 70
+	VT_CF               VARTYPE = 71
+	VT_CLSID            VARTYPE = 72
 	VT_VERSIONED_STREAM VARTYPE = 73
-	VT_BSTR_BLOB VARTYPE = 0xfff
-	VT_VECTOR VARTYPE = 0x1000
-	VT_ARRAY VARTYPE = 0x2000
-	VT_BYREF VARTYPE = 0x4000
-	VT_RESERVED VARTYPE = 0x8000
-	VT_ILLEGAL VARTYPE = 0xffff
-	VT_ILLEGALMASKED VARTYPE = 0xfff
-	VT_TYPEMASK VARTYPE = 0xfff
+	VT_BSTR_BLOB        VARTYPE = 0xfff
+	VT_VECTOR           VARTYPE = 0x1000
+	VT_ARRAY            VARTYPE = 0x2000
+	VT_BYREF            VARTYPE = 0x4000
+	VT_RESERVED         VARTYPE = 0x8000
+	VT_ILLEGAL          VARTYPE = 0xffff
+	VT_ILLEGALMASKED    VARTYPE = 0xfff
+	VT_TYPEMASK         VARTYPE = 0xfff
 )
 
 const (
@@ -269,25 +269,35 @@ const (
 
 // C.WCHAR
 // 16bit-encoded
-type WCHAR uint16;
+type WCHAR uint16
+
 // C.HRESULT
 type HRESULT uint32
+
 // C.DWORD
 type DWORD uint32
+
 // unsigned long
 type ULONG uint32
+
 // *WCHAR
 type PnPDeviceID C.PnPDeviceID
+
 // C.CLSCTX
 type CLSCTX int
+
 // C.CLSID
 type CLSID int
+
 // C.IID
 type IID int
+
 // C.PROPERTYKEY
 type PropertyKey int
+
 // C.GUID
 type GUID int
+
 // C.VARENUM
 type VARTYPE uint16
 
@@ -310,17 +320,17 @@ type IUnknown C.IUnknown
 type IEnumPortableDeviceObjectIDs C.IEnumPortableDeviceObjectIDs
 
 type StatStg struct {
-	pwcsName string
-	_type uint32
-	cbSize uint64
-	mtime uint64
-	ctime uint64
-	atime uint64
-	grfMode uint32
+	pwcsName          string
+	_type             uint32
+	cbSize            uint64
+	mtime             uint64
+	ctime             uint64
+	atime             uint64
+	grfMode           uint32
 	grfLocksSupported uint32
-	clsid CLSID
-	grfStateBits uint32
-	reserved uint32
+	clsid             CLSID
+	grfStateBits      uint32
+	reserved          uint32
 }
 
 func (hr HRESULT) Error() string {
@@ -331,7 +341,7 @@ func Initialize() error {
 	log.Println("Initialize():")
 
 	hr := C.CoInitializeEx(nil, C.COINIT_MULTITHREADED)
-	if (hr < 0) {
+	if hr < 0 {
 		return HRESULT(hr)
 	}
 
@@ -442,7 +452,7 @@ func (pPortableDevice *IPortableDevice) Release() error {
 
 func (pPortableDeviceValues *IPortableDeviceValues) GetBoolValue(key PropertyKey) (bool, error) {
 	var (
-		value C.BOOL// non-zero is TRUE, zero is FALSE. Windows Type.
+		value C.BOOL // non-zero is TRUE, zero is FALSE. Windows Type.
 	)
 
 	hr := C.portableDeviceValues_GetBoolValue((*C.IPortableDeviceValues)(pPortableDeviceValues), key.toCPropertyKey(), &value)
@@ -456,7 +466,7 @@ func (pPortableDeviceValues *IPortableDeviceValues) GetBoolValue(key PropertyKey
 
 func (pPortableDeviceValues *IPortableDeviceValues) GetStringValue(key PropertyKey) (string, error) {
 	var (
-		pwstr C.PWSTR
+		pwstr  C.PWSTR
 		cPwstr C.DWORD
 	)
 
@@ -523,7 +533,7 @@ func (pPortableDeviceValues *IPortableDeviceValues) SetStringValue(key PropertyK
 
 	log.Println("SetStringValue(): memory allocated")
 
-	raw := (*[1 << 30]C.WCHAR)(unsafe.Pointer(pwstr))[:len(value) + 1:len(value) + 1]
+	raw := (*[1 << 30]C.WCHAR)(unsafe.Pointer(pwstr))[:len(value)+1 : len(value)+1]
 	for i, char := range []byte(value) {
 		raw[i] = C.WCHAR(char)
 	}
@@ -581,7 +591,7 @@ func (pPortableDeviceValues *IPortableDeviceValues) Release() error {
 func (pPortableDeviceManager *IPortableDeviceManager) GetDevices() ([]PnPDeviceID, error) {
 	var (
 		pPnPDeviceIDs *C.PnPDeviceID = nil
-		cPnPDeviceIDs C.DWORD = 0
+		cPnPDeviceIDs C.DWORD        = 0
 	)
 
 	log.Println("GetDevices(): Ready")
@@ -615,7 +625,7 @@ func (pPortableDeviceManager *IPortableDeviceManager) GetDeviceFriendlyName(pnpD
 	hr := C.portableDeviceManager_GetDeviceFriendlyName((*C.struct_IPortableDeviceManager)(pPortableDeviceManager), pnpDeviceID, &pFriendlyName, &cFriendlyName)
 	defer C.free(unsafe.Pointer(pFriendlyName))
 
-	if (hr < 0) {
+	if hr < 0 {
 		return "", HRESULT(hr)
 	}
 
@@ -635,7 +645,7 @@ func (pPortableDeviceManager *IPortableDeviceManager) GetDeviceManufacturer(pnpD
 	hr := C.portableDeviceManager_GetDeviceManufacturer((*C.IPortableDeviceManager)(pPortableDeviceManager), pnpDeviceID, &pManufacturer, &cManufacturer)
 	defer C.free(unsafe.Pointer(pManufacturer))
 
-	if (hr < 0) {
+	if hr < 0 {
 		return "", HRESULT(hr)
 	}
 
@@ -655,7 +665,7 @@ func (pPortableDeviceManager *IPortableDeviceManager) GetDeviceDescription(pnpDe
 	hr := C.portableDeviceManager_GetDeviceDescription((*C.IPortableDeviceManager)(pPortableDeviceManager), pnpDeviceID, &pDescription, &cDescription)
 	defer C.free(unsafe.Pointer(pDescription))
 
-	if (hr < 0) {
+	if hr < 0 {
 		return "", HRESULT(hr)
 	}
 
@@ -673,9 +683,9 @@ func (pPortableDeviceManager *IPortableDeviceManager) Release() {
 // TODO not finished
 func (pPortableDeviceContent *IPortableDeviceContent) CreateObjectWithPropertiesAndData(pValues *IPortableDeviceValues) (*IStream, uint32, error) {
 	var (
-		pData *C.IStream
-		optimalWriteBufferSize C.DWORD = 0// TRUE for ignoring
-		pCookie C.PWSTR = nil// Optional.
+		pData                  *C.IStream
+		optimalWriteBufferSize C.DWORD = 0   // TRUE for ignoring
+		pCookie                C.PWSTR = nil // Optional.
 	)
 
 	hr := C.portableDeviceContent_CreateObjectWithPropertiesAndData((*C.IPortableDeviceContent)(pPortableDeviceContent), (*C.IPortableDeviceValues)(pValues), &pData, &optimalWriteBufferSize, &pCookie)
@@ -693,10 +703,10 @@ func (pPortableDeviceContent *IPortableDeviceContent) CreateObjectWithProperties
 // parentObjectID: start from it.
 func (pPortableDeviceContent *IPortableDeviceContent) EnumObjects(parentObjectID string) (*IEnumPortableDeviceObjectIDs, error) {
 	var (
-		flags C.DWORD = 0// ignored
-		pwstrParentObjectID C.PWSTR// "DEVICE", empty string is valid but not should not be nullptr.
-		pFilter *C.IPortableDeviceValues = nil// ignored
-		pEnum *C.IEnumPortableDeviceObjectIDs
+		flags               C.DWORD                  = 0   // ignored
+		pwstrParentObjectID C.PWSTR                        // "DEVICE", empty string is valid but not should not be nullptr.
+		pFilter             *C.IPortableDeviceValues = nil // ignored
+		pEnum               *C.IEnumPortableDeviceObjectIDs
 	)
 
 	pwstrParentObjectID, _ = allocatePWSTR(parentObjectID)
@@ -833,7 +843,6 @@ func (pPortableDeviceProperties *IPortableDeviceProperties) SetValues(objectID s
 
 	// TODO do something with pResults
 
-
 	err = (*IPortableDeviceValues)(pResults).Release()
 	if err != nil {
 		panic(err)
@@ -877,9 +886,9 @@ func (pPortableDeviceDataStream *IPortableDeviceDataStream) GetObjectID() (strin
 //
 func (pEnumObjectIDs *IEnumPortableDeviceObjectIDs) Next(cObjects uint32) ([]string, error) {
 	var (
-		pObjIDs *C.PWSTR// Array of PWSTR. Not a PWSTR. Must have a size of cObjects. ObjectIDs will be here.
-		cObjIDs *C.DWORD// Array of size of PWSTR.
-		cPetched C.ULONG// amounts of ObjectID placed in pObjIDs.
+		pObjIDs  *C.PWSTR // Array of PWSTR. Not a PWSTR. Must have a size of cObjects. ObjectIDs will be here.
+		cObjIDs  *C.DWORD // Array of size of PWSTR.
+		cPetched C.ULONG  // amounts of ObjectID placed in pObjIDs.
 	)
 
 	pObjIDs = (*C.PWSTR)(C.malloc(C.size_t(C.sizeof_PWSTR * cObjects)))
@@ -961,7 +970,7 @@ func (pPortableDevicePropVariantCollection *IPortableDevicePropVariantCollection
 
 func (pPortableDeviceResources *IPortableDeviceResources) GetStream(objectID string, key PropertyKey, mode uint32) (*IStream, uint32, error) {
 	var (
-		pStream *C.IStream
+		pStream           *C.IStream
 		optimalBufferSize C.DWORD
 	)
 
@@ -1003,19 +1012,19 @@ func (pStream *IStream) Stat(statFlags uint32) (*StatStg, error) {
 
 	result := new(StatStg)
 
-	if statFlags & STATFLAG_NONAME == 0 {
-		pwcsName := C.PWSTR(unsafe.Pointer(statstg.pwcsName))// nil if noname flags is set. if pwcsName is not nil, must call CoTaskMemFree method.
+	if statFlags&STATFLAG_NONAME == 0 {
+		pwcsName := C.PWSTR(unsafe.Pointer(statstg.pwcsName)) // nil if noname flags is set. if pwcsName is not nil, must call CoTaskMemFree method.
 		result.pwcsName = toGoString(pwcsName, wcslen(pwcsName))
 	}
 	result._type = uint32(statstg._type)
 	cbSize := [8]byte(statstg.cbSize)
-	result.cbSize = binary.BigEndian.Uint64(cbSize[:])// C.ULARGE_INTEGER 64bit(8byte, DWORD times 2) union
-	result.mtime = uint64(statstg.mtime.dwLowDateTime << 32 | statstg.mtime.dwHighDateTime)// C.FILETIME, struct contains two DWORD fields.
-	result.ctime = uint64(statstg.ctime.dwLowDateTime << 32 | statstg.ctime.dwHighDateTime)// C.FILETIME
-	result.atime = uint64(statstg.atime.dwLowDateTime << 32 | statstg.atime.dwHighDateTime)// C.FILETIME
+	result.cbSize = binary.BigEndian.Uint64(cbSize[:])                                    // C.ULARGE_INTEGER 64bit(8byte, DWORD times 2) union
+	result.mtime = uint64(statstg.mtime.dwLowDateTime<<32 | statstg.mtime.dwHighDateTime) // C.FILETIME, struct contains two DWORD fields.
+	result.ctime = uint64(statstg.ctime.dwLowDateTime<<32 | statstg.ctime.dwHighDateTime) // C.FILETIME
+	result.atime = uint64(statstg.atime.dwLowDateTime<<32 | statstg.atime.dwHighDateTime) // C.FILETIME
 	result.grfMode = uint32(statstg.grfMode)
 	result.grfLocksSupported = uint32(statstg.grfLocksSupported)
-	result.clsid = 0//C.CLSID(statstg.clsid)
+	result.clsid = 0 //C.CLSID(statstg.clsid)
 	result.grfStateBits = uint32(statstg.grfStateBits)
 	result.reserved = uint32(statstg.reserved)
 
@@ -1043,8 +1052,8 @@ func (pStream *IStream) Write(buffer []byte) (uint32, error) {
 func (pSequentialStream *ISequentialStream) Read(buffer []byte) (uint32, error) {
 	var (
 		pBuffer C.LPVOID
-		cb C.ULONG = C.ULONG(len(buffer))
-		cbRead C.ULONG
+		cb      C.ULONG = C.ULONG(len(buffer))
+		cbRead  C.ULONG
 	)
 
 	pBuffer = C.LPVOID(C.malloc(C.size_t(len(buffer))))
@@ -1066,8 +1075,8 @@ func (pSequentialStream *ISequentialStream) Read(buffer []byte) (uint32, error) 
 
 func (pSequentialStream *ISequentialStream) Write(buffer []byte) (uint32, error) {
 	var (
-		pBuffer C.LPVOID
-		cb C.ULONG = C.ULONG(len(buffer))
+		pBuffer   C.LPVOID
+		cb        C.ULONG = C.ULONG(len(buffer))
 		cbWritten C.ULONG
 	)
 
@@ -1138,7 +1147,7 @@ func allocatePWSTRCoTask(value string) (C.PWSTR, error) {
 	if pwstr == nil {
 		return nil, E_POINTER
 	}
-	raw := (*[1 << 30]C.WCHAR)(pwstr)[:len(value) + 1:len(value) + 1]
+	raw := (*[1 << 30]C.WCHAR)(pwstr)[:len(value)+1 : len(value)+1]
 
 	for i, r := range utf16Str {
 		raw[i] = C.WCHAR(r)
@@ -1165,7 +1174,7 @@ func allocatePWSTR(value string) (C.PWSTR, error) {
 	if pwstr == nil {
 		return nil, E_POINTER
 	}
-	raw := (*[1 << 30]C.WCHAR)(pwstr)[:len(value) + 1:len(value) + 1]
+	raw := (*[1 << 30]C.WCHAR)(pwstr)[:len(value)+1 : len(value)+1]
 
 	for i, r := range utf16Str {
 		raw[i] = C.WCHAR(r)
@@ -1198,7 +1207,7 @@ static int wcslen(WCHAR* wstr)
   }
   return i;
 }
- */
+*/
 // Implementation of wcslen function.
 //func wcslen(pwstr C.PWSTR) int {
 //	s := unsafe.Pointer(pwstr)

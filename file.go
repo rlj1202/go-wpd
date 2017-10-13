@@ -12,8 +12,8 @@ import "unsafe"
 func SHCreateStreamOnFile(fileName string, mode uint32) (*IStream, error) {
 	var (
 		pFileName C.PWSTR
-		grfMode C.DWORD = C.DWORD(mode)
-		pStream *C.IStream
+		grfMode   C.DWORD = C.DWORD(mode)
+		pStream   *C.IStream
 	)
 
 	pFileName, err := allocatePWSTR(fileName)

@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-func ExampleTransferToPC() {
+func Example_transferToPC() {
 	gowpd.Initialize()
 
 	mng, err := gowpd.CreatePortableDeviceManager()
@@ -54,7 +54,7 @@ func ExampleTransferToPC() {
 			panic(err)
 		}
 
-		pFinalFileStream, err := gowpd.SHCreateStreamOnFile(targetDestination, gowpd.STGM_CREATE | gowpd.STGM_WRITE)
+		pFinalFileStream, err := gowpd.SHCreateStreamOnFile(targetDestination, gowpd.STGM_CREATE|gowpd.STGM_WRITE)
 		if err != nil {
 			panic(err)
 		}

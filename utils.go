@@ -1,8 +1,8 @@
 package gowpd
 
 import (
-	"path/filepath"
 	"log"
+	"path/filepath"
 )
 
 // Set necessary properties for all content type.
@@ -30,7 +30,7 @@ func GetRequiredPropertiesForAllContentTypes(pObjectProperties *IPortableDeviceV
 	originalFileName := filepath.Base(filePath)
 	ext := filepath.Ext(filePath)
 	pObjectProperties.SetStringValue(WPD_OBJECT_ORIGINAL_FILE_NAME, originalFileName)
-	pObjectProperties.SetStringValue(WPD_OBJECT_NAME, originalFileName[:len(originalFileName) - len(ext)])
+	pObjectProperties.SetStringValue(WPD_OBJECT_NAME, originalFileName[:len(originalFileName)-len(ext)])
 
 	return nil
 }
@@ -125,7 +125,7 @@ func GetRequiredPropertiesForContactContentTypes(pObjectProperties *IPortableDev
 func StreamCopy(pDestStream *IStream, pSourceStream *IStream, cbTransferSize uint32) (uint32, error) {
 	pObjectData := make([]byte, cbTransferSize)
 
-	cbTotalBytesRead := uint32(0)
+	//cbTotalBytesRead := uint32(0)
 	cbTotalBytesWritten := uint32(0)
 
 	for {
@@ -139,7 +139,7 @@ func StreamCopy(pDestStream *IStream, pSourceStream *IStream, cbTransferSize uin
 			break
 		}
 
-		cbTotalBytesRead += cbBytesRead
+		//cbTotalBytesRead += cbBytesRead
 		cbBytesWritten, err := pDestStream.Write(pObjectData[:cbBytesRead])
 		if err != nil {
 			panic(err)

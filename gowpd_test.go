@@ -3,8 +3,8 @@ package gowpd_test
 import (
 	"fmt"
 	"github.com/rlj1202/go-wpd"
-	"testing"
 	"log"
+	"testing"
 )
 
 func TestAll(t *testing.T) {
@@ -112,6 +112,9 @@ func TestAll(t *testing.T) {
 		}
 
 		newlyCreatedObjectID, err := pFinalObjectDataStream.GetObjectID()
+		if err != nil {
+			panic(err)
+		}
 		log.Printf("\"%s\" has been transferred to device successfully: %d\n", newlyCreatedObjectID, cbBytesWritten)
 
 		// transferring is finished. release the deviceID.

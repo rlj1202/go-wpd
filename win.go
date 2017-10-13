@@ -4,8 +4,8 @@ package gowpd
 // //#include <libgowpd.h>
 import "C"
 import (
-	"unsafe"
 	"log"
+	"unsafe"
 )
 
 type PropVariant C.PROPVARIANT

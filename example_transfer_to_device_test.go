@@ -98,6 +98,9 @@ func Example_transferToDevice() {
 		}
 
 		newlyCreatedObjectID, err := pFinalObjectDataStream.GetObjectID()
+		if err != nil {
+			panic(err)
+		}
 		log.Printf("\"%s\" has been transferred to device successfully: %d\n", newlyCreatedObjectID, cbBytesWritten)
 
 		// transferring is finished. release the deviceID.

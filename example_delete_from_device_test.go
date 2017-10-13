@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-func ExampleDeleteFromDevice() {
+func Example_deleteFromDevice() {
 	gowpd.Initialize()
 
 	mng, err := gowpd.CreatePortableDeviceManager()
