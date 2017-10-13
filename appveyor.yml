@@ -10,16 +10,13 @@ clone_folder: C:\gopath\src\github.com\rlj1202\go-wpd
 
 environment:
   GOPATH: C:\gopath
+  GCCPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin
 
 install:
-  - dir C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1
-  - dir C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64
-  - set PATH=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;%PATH%
-  - echo %PATH%
-  - echo %GOPATH%
-  - set PATH=%GOPATH%\bin;c:\go\bin;%PATH%
+  - set PATH=%GCCPATH%;%GOPATH%\bin;c:\go\bin;%PATH%
   - go version
   - go env
 
 build_script:
+  - msbuild libgowpd/libgowpd.sln
   - go build -v
