@@ -6,13 +6,13 @@ branches:
   only:
     - master
 
-clone_folder: c:\gopath\src\github.com\rlj1202\go-wpd
+clone_folder: C:\gopath\src\github.com\rlj1202\go-wpd
 
 environment:
-  GOPATH: c:\gopath
+  GOPATH: C:\gopath
 
 install:
-  - C:\msys64\usr\bin\bash -lc "pacman --sync --noconfirm mingw-w64-x86_64-toolchain"
+  - set PATH=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
   - echo %PATH%
   - echo %GOPATH%
   - set PATH=%GOPATH%\bin;c:\go\bin;%PATH%
