@@ -15,7 +15,8 @@ environment:
   GOPATH: C:\gopath
 
 install:
-  - set PATH=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;%GOPATH%\bin;C:\go\bin;%PATH%
+  - C:\msys64\usr\bin\bash -lc "pacman --sync --noconfirm mingw-w64-x86_64-toolchain"
+  - set PATH=C:\msys64\mingw64\bin;%GOPATH%\bin;C:\go\bin;%PATH%
   - echo %PATH%
   - go version
   - go env
