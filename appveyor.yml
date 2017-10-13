@@ -16,7 +16,9 @@ environment:
   GCCPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin
 
 install:
-  - set PATH=%GCCPATH%;%GOPATH%\bin;c:\go\bin;%PATH%
+  - dir %GCCPATH%
+  - set PATH=%GCCPATH%;%GOPATH%\bin;C:\go\bin;%PATH%
+  - echo %PATH%
   - go version
   - go env
 
