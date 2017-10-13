@@ -6,6 +6,9 @@ branches:
   only:
     - master
 
+image:
+  - Visual Studio 2017
+
 clone_folder: C:\gopath\src\github.com\rlj1202\go-wpd
 
 environment:
