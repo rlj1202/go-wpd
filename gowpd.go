@@ -79,16 +79,17 @@ const (
 	S_OK    HRESULT = C.S_OK & 0xffffffff    // 0x00000000
 	S_FALSE HRESULT = C.S_FALSE & 0xffffffff // 0x00000001
 
-	E_ABORT        HRESULT = C.E_ABORT & 0xffffffff        // 0x80004004
-	E_ACCESSDENIED HRESULT = C.E_ACCESSDENIED & 0xffffffff // 0x80070005
-	E_FAIL         HRESULT = C.E_FAIL & 0xffffffff         // 0x80004005
-	E_HANDLE       HRESULT = C.E_HANDLE & 0xffffffff       // 0x80070006
-	E_INVALIDARG   HRESULT = C.E_INVALIDARG & 0xffffffff   // 0x80070057
-	E_NOINTERFACE  HRESULT = C.E_NOINTERFACE & 0xffffffff  // 0x80004002
-	E_NOTIMPL      HRESULT = C.E_NOTIMPL & 0xffffffff      // 0x80004001
-	E_OUTOFMEMORY  HRESULT = C.E_OUTOFMEMORY & 0xffffffff  // 0x8007000E
-	E_POINTER      HRESULT = C.E_POINTER & 0xffffffff      // 0x80004003
-	E_UNEXPECTED   HRESULT = C.E_UNEXPECTED & 0xffffffff   // 0x8000FFFF
+	E_ABORT             HRESULT = C.E_ABORT & 0xffffffff             // 0x80004004
+	E_ACCESSDENIED      HRESULT = C.E_ACCESSDENIED & 0xffffffff      // 0x80070005
+	E_FAIL              HRESULT = C.E_FAIL & 0xffffffff              // 0x80004005
+	E_HANDLE            HRESULT = C.E_HANDLE & 0xffffffff            // 0x80070006
+	ERROR_NOT_SUPPORTED HRESULT = C.ERROR_NOT_SUPPORTED & 0xffffffff // 0x80070032
+	E_INVALIDARG        HRESULT = C.E_INVALIDARG & 0xffffffff        // 0x80070057
+	E_NOINTERFACE       HRESULT = C.E_NOINTERFACE & 0xffffffff       // 0x80004002
+	E_NOTIMPL           HRESULT = C.E_NOTIMPL & 0xffffffff           // 0x80004001
+	E_OUTOFMEMORY       HRESULT = C.E_OUTOFMEMORY & 0xffffffff       // 0x8007000E
+	E_POINTER           HRESULT = C.E_POINTER & 0xffffffff           // 0x80004003
+	E_UNEXPECTED        HRESULT = C.E_UNEXPECTED & 0xffffffff        // 0x8000FFFF
 
 	CO_E_NOTINITIALIZED HRESULT = C.CO_E_NOTINITIALIZED & 0xffffffff // 0x800401f0
 
@@ -479,15 +480,11 @@ func (pPortableDeviceValues *IPortableDeviceValues) GetStringValue(key PropertyK
 		return "", HRESULT(hr)
 	}
 
-	raw := (*[1 << 30]C.WCHAR)(unsafe.Pointer(pwstr))[:cPwstr:cPwstr]
-	str := make([]byte, DWORD(cPwstr))
-	for i, wchar := range raw {
-		str[i] = byte(wchar)
-	}
+	str := toGoString(pwstr, uint32(cPwstr))
 
-	log.Printf("GetStringValue(): Result: %s\n", string(str))
+	log.Printf("GetStringValue(): Result: %s\n", str)
 
-	return string(str), nil
+	return str, nil
 }
 
 func (pPortableDeviceValues *IPortableDeviceValues) GetUnsignedIntegerValue(key PropertyKey) (uint32, error) {

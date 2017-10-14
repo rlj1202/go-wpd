@@ -22,6 +22,8 @@ func (hr HRESULT) String() string {
 		return "E_FAIL"
 	case E_HANDLE:
 		return "E_HANDLE"
+	case ERROR_NOT_SUPPORTED:
+		return "ERROR_NOT_SUPPORTED"
 	case E_INVALIDARG:
 		return "E_INVALIDARG"
 	case E_NOINTERFACE:
